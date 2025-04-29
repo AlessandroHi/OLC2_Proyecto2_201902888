@@ -61,4 +61,4 @@ while true; do
 done
 
 # Limpieza opcional (descomentar si deseas borrar los archivos temporales)
-# rm "$file.o" "$file"
+rm "$file.o" "$file"
