@@ -2,6 +2,6 @@
 Proyecto 2 de Laboratorio Compiladores 2
 
 ### PARA QEMU Y DEBUG
-    ./compile.sh
+   ./compilar.sh
 
 
