@@ -1,11 +1,12 @@
 using System.Security.Cryptography;
 using System.Text;
+using Antlr4.Runtime.Atn;
 using Microsoft.AspNetCore.Routing.Constraints;
 
 
 public class StackObject
 {
-   public enum StackObjectType{ Int, Float, String} // se maneja como el value grapper
+   public enum StackObjectType{ Int, Float, String , Bool} // se maneja como el value grapper
     public StackObjectType Type { get; set; }
 
     public int Length { get; set; } // tamaño en staclk
@@ -22,7 +23,27 @@ public class ARMGenerator
 
     private int depth = 0; // nivel de anidamiento
 
+    private int labelCounter = 0; // contador de etiquetas
+
+    public string GetLabel()
+    {
+        return $"L{labelCounter++}";
+    }
+
+    public void SetLabel(string label)
+    {
+        instructions.Add($"{label}:");
+    }
+
     // -- stack operations --
+
+    public StackObject TopObject()
+    {
+
+        return stack.Last();
+    }
+
+
 
     public void PushObject(StackObject obj)
     {
@@ -34,15 +55,34 @@ public class ARMGenerator
     {
         switch (obj.Type)
         {
-            case StackObject.StackObjectType.Int:
+            case StackObject.StackObjectType.Int: // int
                 Mov(Register.X0, (int)value);
                 Push(Register.X0);
                 break;
+
+
             case StackObject.StackObjectType.Float:
-             
+                long valorFloat = BitConverter.DoubleToInt64Bits((double)value);
+                ushort[] partes = new ushort[4]; // aquí usamos ushort
+                for (int i = 0; i < 4; i++)
+                {
+                    partes[i] = (ushort)((valorFloat >> (i * 16)) & 0xFFFF); // conversión explícita a ushort
+                }
+                instructions.Add($"MOVZ x0, #{partes[0]}, LSL #0");
+
+                for (int i = 1; i < 4; i++)
+                {
+                
+
+                    instructions.Add($"MOVK x0, #{partes[i]}, LSL #{i * 16}");
+                }
+                Push(Register.X0);
                 break;
-            case StackObject.StackObjectType.String:
-                 List<byte> stringArray = Utils.StringToByteArray((string)value);
+
+            case StackObject.StackObjectType.String: // string
+
+
+                 List<byte> stringArray = Utils.StringToBytes((string)value);
 
                  Push(Register.HP);
                  for (int i = 0; i < stringArray.Count; i++)
@@ -54,8 +94,14 @@ public class ARMGenerator
                     Mov(Register.X0, 1);
                     Add(Register.HP, Register.HP, Register.X0);  
                  }
-              
-                break;
+
+                 break;
+
+            case StackObject.StackObjectType.Bool: // bool
+               Mov(Register.X0, (bool)value ? 1 : 0);
+               Push(Register.X0);
+               break;
+
             default:
                 throw new ArgumentException("Tipo de objeto no soportado.");
         }
@@ -96,6 +142,16 @@ public class ARMGenerator
         return new StackObject
         {
             Type = StackObject.StackObjectType.String,
+            Length = 8,
+            Depth = depth,
+            Id = null
+        };
+    }
+
+    public StackObject BoolObject(){
+        return new StackObject
+        {
+            Type = StackObject.StackObjectType.Bool,
             Length = 8,
             Depth = depth,
             Id = null
@@ -223,6 +279,96 @@ public class ARMGenerator
         instructions.Add($"LDR {rd}, [SP], #8");
     }
 
+    // float operations 
+
+ public void Scvtf(string rd, string registro)
+    {
+         instructions.Add($"SCVTF {rd}, {registro}");
+    }
+    public void Fmov(string rd, string registro)
+    {
+        instructions.Add($"FMOV {rd}, {registro}");
+    }
+    public void Fmov1(string rd, double value)
+{
+    var valStr = value.ToString(System.Globalization.CultureInfo.InvariantCulture);
+    instructions.Add($"FMOV {rd}, {valStr}");
+}
+    public void Fadd(string rd, string registro1, string registro2)
+    {
+        instructions.Add($"FADD {rd}, {registro1}, {registro2}");
+    }
+    public void Fsub(string rd, string registro1, string registro2)
+    {
+        instructions.Add($"FSUB {rd}, {registro1}, {registro2}");
+    }
+    public void Fmul(string rd, string registro1, string registro2)
+    {
+        instructions.Add($"FMUL {rd}, {registro1}, {registro2}");
+    }
+    public void Fdiv(string rd, string registro1, string registro2)
+    {
+        instructions.Add($"FDIV {rd}, {registro1}, {registro2}");
+    }
+    
+
+
+    //-------------
+
+
+    public void Cmp(string rs1, string rs2)
+    {
+        instructions.Add($"CMP {rs1}, {rs2}");
+    }
+
+    public void Beq(string label)
+    {
+        instructions.Add($"BEQ {label}");
+    }
+
+    public void Bne(string label)
+    {
+        instructions.Add($"BNE {label}");
+    }
+
+    public void Bgt(string label)
+    {
+        instructions.Add($"BGT {label}");
+    }
+
+    public void Blt(string label)
+    {
+        instructions.Add($"BLT {label}");
+    }
+
+    public void B(string etiqueta)
+    {
+        instructions.Add($"B {etiqueta}");
+    }
+    public void Bl(string label)
+    {
+
+        instructions.Add($"BL {label}");
+    }
+
+        public void Bge(string etiqueta)
+    {
+        instructions.Add($"BGE {etiqueta}");
+    }
+
+    public void Ble(string etiqueta)
+    {
+        instructions.Add($"BLE {etiqueta}");
+    }
+
+    public void Cbz(string rs, string etiqueta)
+    {
+        instructions.Add($"CBZ {rs}, {etiqueta}");
+    }
+
+
+
+
     public void Svc(){
         instructions.Add($"SVC #0");
     }
@@ -247,6 +393,13 @@ public class ARMGenerator
         stdLib.Use("print_string");
         instructions.Add($"MOV X0, {rs}");
         instructions.Add($"BL print_string");
+    }
+
+    public void PrintDouble()
+    {
+        stdLib.Use("print_integer");
+        stdLib.Use("print_double");
+        instructions.Add($"BL print_double");
     }
     
     public void Comment(string comment)

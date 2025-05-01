@@ -6,7 +6,8 @@ using analyzer;
 using Antlr4.Runtime.Misc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.Extensions.Logging.Console;
-using Proyecto1_OLC2;
+using System.Globalization;
+
 
 public class CompilerVisitor : LanguageBaseVisitor<Object?>
 {
@@ -135,7 +136,9 @@ public class CompilerVisitor : LanguageBaseVisitor<Object?>
        c.Comment("Print");
        Visit(context.expr());
        c.Comment("Poping value");
-       var value = c.PopObject(Register.X0); // pop a nivel virtual
+
+       var isFloat = c.TopObject().Type == StackObject.StackObjectType.Float;
+       var value = c.PopObject(isFloat? Register.D0 : Register.X0); // pop a nivel virtual
        
 
        if (value.Type == StackObject.StackObjectType.Int)
@@ -145,6 +148,14 @@ public class CompilerVisitor : LanguageBaseVisitor<Object?>
        } else if (value.Type == StackObject.StackObjectType.String)
        {
           c.PrintString(Register.X0);
+       }
+       else if (value.Type == StackObject.StackObjectType.Float)
+       {
+          c.PrintDouble();
+       }
+       else
+       {
+          throw new Exception($"Unknown type: {value.Type}");
        }
        return null;
      }
@@ -165,6 +176,11 @@ public class CompilerVisitor : LanguageBaseVisitor<Object?>
     // VisitFloat
     public override Object? VisitFloat(LanguageParser.FloatContext context)
     {
+         var value = context.FLOAT().GetText();
+         c.Comment($"Float: {value}");
+
+         var floatObject = c.FloatObject();
+         c.PushConstant(floatObject, double.Parse(value, CultureInfo.InvariantCulture));
          return null;
         
     }
@@ -173,6 +189,9 @@ public class CompilerVisitor : LanguageBaseVisitor<Object?>
     // VisitBoolean
     public override Object? VisitBoolean(LanguageParser.BooleanContext context)  
     {
+         var value = context.BOOL().GetText();
+         c.Comment($"Boolean: {value}");
+         c.PushConstant(c.BoolObject(), value == "true" ? true : false);
          return null;
     }
 
@@ -211,11 +230,40 @@ public class CompilerVisitor : LanguageBaseVisitor<Object?>
 
          Visit(context.expr(1));
 
-         var right = c.PopObject(Register.X1); // pop a nivel virtual
-         var left = c.PopObject(Register.X0);
+
+         var isRightFloat = c.TopObject().Type == StackObject.StackObjectType.Float;
+         var right = c.PopObject(isRightFloat ? Register.D0 : Register.X0); // pop a nivel virtual
+         var isLeftFloat = c.TopObject().Type == StackObject.StackObjectType.Float;
+         var left = c.PopObject(isLeftFloat ? Register.D1 : Register.X1); // pop a nivel virtual
 
          // se agrega validaciones semanticas 
-        
+
+          if (isLeftFloat || isRightFloat) //  para floats
+          {
+               if(!isLeftFloat) c.Scvtf(Register.D1, Register.X1);
+               if(!isRightFloat) c.Scvtf(Register.D0, Register.X0);
+               
+               if (op == "+")
+               {
+                    c.Fadd(Register.D0, Register.D0, Register.D1);
+               }
+               else if (op == "-")
+               {
+                    c.Fsub(Register.D0, Register.D1, Register.D0);
+               }
+               else
+               {
+                    throw new Exception($"Unknown operator: {op}");
+               }
+
+               c.Comment($"Pushing {op} result");
+               c.Push(Register.D0);
+               c.PushObject(c.CloneObject(
+                    isLeftFloat ? left: right
+               ));
+
+               return null;
+          }
 
           if (op == "+")
            {
@@ -223,7 +271,7 @@ public class CompilerVisitor : LanguageBaseVisitor<Object?>
            }
            else if (op == "-")
            {
-                c.Sub(Register.X0, Register.X0, Register.X1);
+                c.Sub(Register.X0, Register.X1, Register.X0);
            }
            else
            {
@@ -284,6 +332,58 @@ public class CompilerVisitor : LanguageBaseVisitor<Object?>
     // VisitRelational
     public override Object? VisitRelational(LanguageParser.RelationalContext context)
     {
+         c.Comment("Relational operator");
+
+         var op = context.op.Text;
+         Visit(context.expr(0));
+         Visit(context.expr(1));
+         
+         var isRightFloat = c.TopObject().Type == StackObject.StackObjectType.Float;
+         var right = c.PopObject(isRightFloat ? Register.D0 : Register.X0); // pop a nivel virtual
+         var isLeftFloat = c.TopObject().Type == StackObject.StackObjectType.Float;
+         var left = c.PopObject(isLeftFloat ? Register.D1 : Register.X1); // pop a nivel virtual
+
+           if (isLeftFloat || isRightFloat) //  para floats
+           {
+                
+                return null;
+           }
+
+
+           c.Cmp(Register.X1, Register.X0);
+
+           var trueLabel = c.GetLabel();
+           var endlabe = c.GetLabel();
+
+       
+            switch (op)
+            {
+                case "<":
+                    c.Blt(trueLabel);
+                    break;
+                case ">":
+                    c.Bgt(trueLabel);
+                    break;
+                case "<=":
+                    c.Ble(trueLabel);
+                    break;
+                case ">=":
+                    c.Bge(trueLabel);
+                    break;
+                
+            }
+
+            c.Mov(Register.X0, 0);
+            c.Push(Register.X0);
+            c.B(endlabe);
+            c.SetLabel(trueLabel);
+            c.Mov(Register.X0, 1);
+            c.Push(Register.X0);
+            c.SetLabel(endlabe);
+
+            c.PushObject(c.BoolObject());
+
+
          return null;
     }
 
@@ -320,23 +420,48 @@ public class CompilerVisitor : LanguageBaseVisitor<Object?>
     }
 
 
-    //VisitMatrix
-    public override Object? VisitMatrix(LanguageParser.MatrixContext context)
-    {
-         return null;
-
-    }
-
-    //VisitMatrixIndex
-    public override Object? VisitMatrixIndex([NotNull] LanguageParser.MatrixIndexContext context)
-    {
-         return null;
-    }
-
 
     // VisitIfStmt
     public override Object? VisitIfStmt(LanguageParser.IfStmtContext context)
     {
+
+           /*
+        if (context.ELSE() != null)
+        {
+            // Si hay un bloque else, visitar el bloque
+            Visit(context.block());
+        }
+        else
+        {
+            // Si no hay bloque else, solo visitar la expresión
+            Visit(context.expr());
+        }   
+
+        */
+        c.Comment("Estoy en If");
+        Visit(context.expr());//aqui hay un booleano
+        c.Pop(Register.X0);
+        var ifElse = context.stmt().Length > 1;
+        if(ifElse){
+            var elseLabel = c.GetLabel();
+            var endLabel = c.GetLabel();
+            c.Cbz(Register.X0, elseLabel);
+            Visit(context.stmt(0));
+            c.B(endLabel);
+            c.SetLabel(elseLabel);
+            Visit(context.stmt(1));
+            c.SetLabel(endLabel);
+
+        }
+        else
+        {
+            var endLabel = c.GetLabel();
+            c.Cbz(Register.X0, endLabel);
+            Visit(context.stmt(0));
+            c.SetLabel(endLabel);
+        }
+         
+
          return null;
     }
 
@@ -420,10 +545,6 @@ public class CompilerVisitor : LanguageBaseVisitor<Object?>
          return null;
     }
 
-    public Object? Visitcall(Invocable invocable, LanguageParser.ArgsContext context)
-    {
-       return null;
-    }
 
     //VisitFuncDcl
     public override Object? VisitFuncDcl(LanguageParser.FuncDclContext context)

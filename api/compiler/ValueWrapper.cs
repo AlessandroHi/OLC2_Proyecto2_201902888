@@ -17,4 +17,3 @@ public record MatrixValue(List<List<ValueWrapper>> Value) : ValueWrapper;
 public record FunctionValue(Invocable invocable, string name) : ValueWrapper;
 public record VoidValue : ValueWrapper;
 
-

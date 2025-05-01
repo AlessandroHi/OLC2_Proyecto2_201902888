@@ -40,4 +40,3 @@ public class SyntaxErrorListener : BaseErrorListener
         throw new ParseCanceledException($"Error sintactico en linea {line}:{charPositionInLine} - {msg}");
     }
 }
-
