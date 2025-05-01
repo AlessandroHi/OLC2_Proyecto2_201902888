@@ -1,18 +1,70 @@
-
 .data
 heap: .space 4096
 .text
 .global _start
 _start:
    adr x10, heap
-// Print
+// Declarar variable: i
 // Integer: 1
 MOV x0, #1
+STR x0, [SP, #-8]!
+// Estoy en for condicional
+L0:
+// Relational operator
+// Identifier: i
+MOV x0, #0
+ADD x0, sp, x0
+LDR x0, [x0, #0]
+STR x0, [SP, #-8]!
+// Integer: 5
+MOV x0, #5
+STR x0, [SP, #-8]!
+LDR x0, [SP], #8
+LDR x1, [SP], #8
+CMP x1, x0
+BLE L2
+MOV x0, #0
+STR x0, [SP, #-8]!
+B L3
+L2:
+MOV x0, #1
+STR x0, [SP, #-8]!
+L3:
+LDR x0, [SP], #8
+CBZ x0, L1
+// Inicia bloque
+// Print
+// Identifier: i
+MOV x0, #0
+ADD x0, sp, x0
+LDR x0, [x0, #0]
 STR x0, [SP, #-8]!
 // Poping value
 LDR x0, [SP], #8
 MOV X0, x0
 BL print_integer
+// Asignar valor a variable: i
+// Identifier: i
+MOV x0, #0
+ADD x0, sp, x0
+LDR x0, [x0, #0]
+STR x0, [SP, #-8]!
+// Integer: 1
+MOV x0, #1
+STR x0, [SP, #-8]!
+LDR x0, [SP], #8
+LDR x1, [SP], #8
+ADD x0, x0, x1
+STR x0, [SP, #-8]!
+LDR x0, [SP], #8
+MOV x1, #0
+ADD x1, sp, x1
+STR x0, [x1, #0]
+STR x0, [SP, #-8]!
+LDR x0, [SP], #8
+B L0
+L1:
+// End of while statement
 MOV x0, #0
 MOV x8, #93
 SVC #0

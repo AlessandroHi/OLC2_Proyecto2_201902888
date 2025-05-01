@@ -15,11 +15,16 @@ public class CompilerVisitor : LanguageBaseVisitor<Object?>
 
 
  
-     public ARMGenerator c = new ARMGenerator();
+     public ARMGenerator c = new ARMGenerator(); 
 
+    private String? continueLabel = null;// Etiqueta para el continue
+
+    private String? breakLabel = null;// Etiqueta para el break
+
+    private String? returnLabel = null;// Etiqueta para el return
     public CompilerVisitor()
     {
-      
+      //todo: constructor
     }
 
 
@@ -495,14 +500,85 @@ public class CompilerVisitor : LanguageBaseVisitor<Object?>
     // VisitForStmt
     public override Object? VisitForStmt(LanguageParser.ForStmtContext context)
     {
-         return null;
+         
+      //Este es el for tipo for
+        c.Comment("Estoy en el for clasico");
+        var startLabel = c.GetLabel();
+        var endLabel = c.GetLabel();
+        var incrementLabel = c.GetLabel(); 
+
+        var prevContinueLabel = continueLabel;
+        var prevBreakLabel = breakLabel;
+
+        continueLabel = incrementLabel;
+        breakLabel = endLabel;
+
+        c.NewScope();
+
+        Visit(context.forInit());
+        c.SetLabel(startLabel);
+        Visit(context.expr(0));
+        c.PopObject(Register.X0);
+        c.Cbz(Register.X0, endLabel);
+        Visit(context.stmt());
+        c.SetLabel(incrementLabel);
+        Visit(context.expr(1));
+        c.B(startLabel);
+        c.SetLabel(endLabel);
+
+        c.Comment("End of for statement");
+
+        var bytesToRemove = c.endScope();
+
+        if(bytesToRemove > 0)
+        {
+            c.Comment("Removing " + bytesToRemove + "bytes from stack");
+            c.Mov(Register.X0, bytesToRemove);
+            c.Add(Register.SP, Register.SP, Register.X0 );
+            c.Comment("stack pointer adjusted");
+        }
+
+        continueLabel = prevContinueLabel;
+        breakLabel = prevBreakLabel;
+        return null;
     }
 
 
     //VisitForCondStmt
     public override Object? VisitForCondStmt(LanguageParser.ForCondStmtContext context)
     {
-         return null;
+          //Este es el for tipo while
+        c.Comment("Estoy en for condicional");
+    
+        var startLable = c.GetLabel();
+        var endLabel = c.GetLabel();
+
+        var prevContinueLabel = continueLabel;
+        var prevBreakLabel = breakLabel;
+
+        continueLabel = startLable;
+        breakLabel = endLabel;
+
+
+
+
+        c.SetLabel(startLable);
+        Visit(context.expr());
+        c.PopObject(Register.X0);
+        c.Cbz(Register.X0, endLabel);
+        Visit(context.stmt());
+        c.B(startLable);
+        c.SetLabel(endLabel);
+
+        c.Comment("End of while statement");
+
+        
+         // Restablecer etiquetas de continue y break
+          continueLabel = prevContinueLabel;
+          breakLabel = prevBreakLabel;  
+
+
+        return null;
 
     }
 
@@ -523,13 +599,26 @@ public class CompilerVisitor : LanguageBaseVisitor<Object?>
     //VisitBreakStmt
     public override Object? VisitBreakStmt(LanguageParser.BreakStmtContext context)
     {
+        c.Comment("Estoy en break");
+        if (breakLabel == null)
+        {
+            throw new Exception("Error: break statement outside of loop");
+        }
+        c.B(breakLabel);
         return null;
     }
 
     //VisitContinueStmt
     public override Object? VisitContinueStmt(LanguageParser.ContinueStmtContext context)
     {
-      return null;
+         c.Comment("Estoy en continue");
+        if (continueLabel == null)
+        {
+            throw new Exception("Error: continue statement outside of loop");
+        }
+        c.B(continueLabel);
+        return null;
+     
     }
 
     //VisitReturnStmt
