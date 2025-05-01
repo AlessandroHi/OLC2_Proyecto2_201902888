@@ -42,6 +42,18 @@ public class ARMGenerator
              
                 break;
             case StackObject.StackObjectType.String:
+                 List<byte> stringArray = Utils.StringToByteArray((string)value);
+
+                 Push(Register.HP);
+                 for (int i = 0; i < stringArray.Count; i++)
+                 {
+                    var charCode = stringArray[i];  
+                    Comment($"Pushing character {charCode} to heap");
+                    Mov("w0", charCode);
+                    Strb("w0", Register.HP);
+                    Mov(Register.X0, 1);
+                    Add(Register.HP, Register.HP, Register.X0);  
+                 }
               
                 break;
             default:
@@ -150,6 +162,8 @@ public class ARMGenerator
         throw new ArgumentException($"No se encontró el objeto con ID: {id} en el stack.");
     }
 
+    // -- arithmetic operations --
+
 
     public void Add(string rd, string rs1, string rs2)
     {
@@ -181,6 +195,11 @@ public class ARMGenerator
     public void Str(string rs1, string rs2, int offset = 0)
     {
         instructions.Add($"STR {rs1}, [{rs2}, #{offset}]");
+    }
+
+    public void Strb(string rs1, string rs2)
+    {
+        instructions.Add($"STRB {rs1}, [{rs2}]");
     }
 
     public void Ldr(string rd, string rs1, int offset = 0)
@@ -215,6 +234,7 @@ public class ARMGenerator
         Svc();
     }
 
+    // -- standard library operations --
     public void PrintInteger(string rs)
     {
         stdLib.Use("print_integer"); 
@@ -222,6 +242,13 @@ public class ARMGenerator
         instructions.Add($"BL print_integer");
     }
 
+    public void PrintString(string rs)
+    {
+        stdLib.Use("print_string");
+        instructions.Add($"MOV X0, {rs}");
+        instructions.Add($"BL print_string");
+    }
+    
     public void Comment(string comment)
     {
         instructions.Add($"// {comment}");
@@ -230,9 +257,13 @@ public class ARMGenerator
     public override string ToString()
     {
        var sb = new StringBuilder();
+       sb.AppendLine(".data");
+       sb.AppendLine("heap: .space 4096");
        sb.AppendLine(".text");
        sb.AppendLine(".global _start");
        sb.AppendLine("_start:");
+       sb.AppendLine("   adr x10, heap");
+
        EndProgram();
 
        foreach (var instruction in instructions)

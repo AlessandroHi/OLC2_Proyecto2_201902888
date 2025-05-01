@@ -141,6 +141,10 @@ public class CompilerVisitor : LanguageBaseVisitor<Object?>
        if (value.Type == StackObject.StackObjectType.Int)
        {
           c.PrintInteger(Register.X0);
+          
+       } else if (value.Type == StackObject.StackObjectType.String)
+       {
+          c.PrintString(Register.X0);
        }
        return null;
      }
@@ -176,6 +180,12 @@ public class CompilerVisitor : LanguageBaseVisitor<Object?>
     // VisitString
     public override Object? VisitString(LanguageParser.StringContext context)
     {
+
+       var value = context.STRING().GetText().Trim('"');
+       c.Comment($"String: {value}");
+       var stringObject = c.StringObject();
+       c.PushConstant(stringObject, value);
+
        return null;
     }
 
