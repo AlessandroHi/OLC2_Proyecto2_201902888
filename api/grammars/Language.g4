@@ -22,7 +22,9 @@ funcDcl: 'func' ID '(' params? ')' type? '{' dcl* '}' ';'? ;
 structDcl: 'type' ID 'struct' '{' varDcl* '}' ;
 
 
-params: ID type (',' ID type)*;
+params: param (',' param)*;
+
+param: ID type;
 
 stmt:
     expr                                               # ExprStmt
@@ -34,7 +36,7 @@ stmt:
     | 'for' ID ',' ID ':=' 'range' expr stmt           # ForRange
     | 'break'  ';'?                                         # BreakStmt
     | 'continue'  ';'?                                      # ContinueStmt
-    | 'fmt.Println' '(' expr ')' ';'?                    # Print
+    | 'fmt.Println(' expr (',' expr)* ')' ';'?                    # Print
     | 'return' expr? ';'?                                   # ReturnStmt; 
 
 cases: 'case' expr ':' stmt*; 
@@ -81,7 +83,7 @@ INT: [0-9]+;
 BOOL: 'true' | 'false';
 FLOAT: [0-9]+ '.' [0-9]+;
 STRING: '"' ('\\"' | ~'"')* '"';
-RUNE: '\'' . '\'';
+RUNE: '\'' ~["'\r\n] '\'';
 Nil: 'nil';
 ID: [a-zA-Z_][a-zA-Z0-9_]*;
 

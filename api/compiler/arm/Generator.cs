@@ -6,17 +6,20 @@ using Microsoft.AspNetCore.Routing.Constraints;
 
 public class StackObject
 {
-   public enum StackObjectType{ Int, Float, String , Bool} // se maneja como el value grapper
+   public enum StackObjectType{ Int, Float, String , Bool, Rune, Undefined} // se maneja como el value grapper
     public StackObjectType Type { get; set; }
 
     public int Length { get; set; } // tamaño en staclk
     public int Depth { get; set; } // anidados
     public string? Id { get; set; } //nombre asociado
+    public int Offset { get; set; } // offset en el stack
 }
 
 public class ARMGenerator 
 {
-    private readonly List<string> instructions = new List<string>();
+    public  List<string> instructions = new List<string>();
+
+    public List<string> funcInstructions = new List<string>();
     private readonly StandardLibrary stdLib = new StandardLibrary();
 
     private List<StackObject> stack = new List<StackObject>(); // stack virtual
@@ -47,6 +50,7 @@ public class ARMGenerator
 
     public void PushObject(StackObject obj)
     {
+        Comment($"Pushing object of type {obj.Type} to stack");
         stack.Add(obj);
  
     }
@@ -102,6 +106,12 @@ public class ARMGenerator
                Push(Register.X0);
                break;
 
+            case StackObject.StackObjectType.Rune: // rune
+            
+                Mov(Register.X0, value is string s ? s[0] : (char)value);
+                Push(Register.X0);
+                break;
+
             default:
                 throw new ArgumentException("Tipo de objeto no soportado.");
         }
@@ -110,10 +120,27 @@ public class ARMGenerator
     }
 
 
+    public void PopObject( )
+    {
+        Comment($"Popping object of type {stack.Last().Type} from stack");
+        
+        try
+        {
+            stack.RemoveAt(stack.Count - 1);
+        }
+        catch (System.Exception)
+        {
+            throw new ArgumentException("No hay objetos en el stack para hacer pop.");
+        }
+    }
+
+
     public StackObject PopObject(string rd)
     {
+        Comment($"Popping object of type {stack.Last().Type} from stack");
         var obj = stack.Last();
-        stack.RemoveAt(stack.Count - 1);
+        
+        PopObject();
 
         Pop(rd);
         return obj;
@@ -152,6 +179,16 @@ public class ARMGenerator
         return new StackObject
         {
             Type = StackObject.StackObjectType.Bool,
+            Length = 8,
+            Depth = depth,
+            Id = null
+        };
+    }
+
+    public StackObject RuneObject(){
+        return new StackObject
+        {
+            Type = StackObject.StackObjectType.Rune,
             Length = 8,
             Depth = depth,
             Id = null
@@ -199,10 +236,25 @@ public class ARMGenerator
     }
 
 
-    public void TagObject(string id)
+public void TagObject(string id)
+{
+    if (stack.Count == 0)
     {
-      stack.Last().Id = id;
+        // Crear un nuevo objeto con valor por defecto
+        var defaultObj = new StackObject
+        {
+            Type = StackObject.StackObjectType.Undefined,
+            Length = 8,
+            Depth = depth,
+            Id = id
+        };
+        stack.Add(defaultObj);
     }
+    else
+    {
+        stack.Last().Id = id;
+    }
+}
 
     public (int, StackObject) GetObject(string id)
     {
@@ -226,6 +278,11 @@ public class ARMGenerator
         instructions.Add($"ADD {rd}, {rs1}, {rs2}");
     }
 
+    public void Adr(string rd, string rs1) /// -------------- REVISAR ACA LUEGO
+    {
+        instructions.Add($"ADR {rd}, {rs1}");
+    }
+
     public void Sub(string rd, string rs1, string rs2)
     {
         instructions.Add($"SUB {rd}, {rs1}, {rs2}");
@@ -244,6 +301,17 @@ public class ARMGenerator
     public void Addi(string rd, string rs1, int imm)
     {
         instructions.Add($"ADDI {rd}, {rs1}, #{imm}");
+    }
+
+        public void Mod(string rd, string rn, string rm)
+    {
+        instructions.Add($"SDIV {Register.X9}, {rn}, {rm}");
+        instructions.Add($"MSUB {rd}, {Register.X9}, {rm}, {rn}");
+    }
+
+        public void Sdiv(string rd, string rn, string rm)
+    {
+        instructions.Add($"SDIV {rd}, {rn}, {rm}");
     }
 
     
@@ -310,7 +378,13 @@ public class ARMGenerator
     {
         instructions.Add($"FDIV {rd}, {registro1}, {registro2}");
     }
-    
+
+    public void Fcmp(string registro1, string registro2)
+    {
+        instructions.Add($"FCMP {registro1}, {registro2}");
+    }
+      
+
 
 
     //-------------
@@ -356,6 +430,11 @@ public class ARMGenerator
         instructions.Add($"BGE {etiqueta}");
     }
 
+    public void Br(string etiqueta)
+    {
+        instructions.Add($"BR {etiqueta}");
+    }
+
     public void Ble(string etiqueta)
     {
         instructions.Add($"BLE {etiqueta}");
@@ -364,6 +443,14 @@ public class ARMGenerator
     public void Cbz(string rs, string etiqueta)
     {
         instructions.Add($"CBZ {rs}, {etiqueta}");
+    }
+
+
+        public void Neg(string destino, string origen) // Negación unaria
+    {
+        Comment("Negación unaria");
+        Mov(destino, 0);
+        Sub(destino, destino, origen); // destino = 0 - origen
     }
 
 
@@ -401,6 +488,22 @@ public class ARMGenerator
         stdLib.Use("print_double");
         instructions.Add($"BL print_double");
     }
+
+     public void PrintBool(string registro)
+    {
+        stdLib.Use("print_boolean");
+        instructions.Add($"MOV X0, {registro}");
+        instructions.Add($"BL print_boolean");
+    }
+
+    public void PrintRune(string registro)
+    {
+     
+        stdLib.Use("print_rune");
+        instructions.Add($"MOV X0, {registro}");
+        instructions.Add($"BL print_rune");
+    }   
+
     
     public void Comment(string comment)
     {
@@ -429,5 +532,16 @@ public class ARMGenerator
         return sb.ToString();
 
     }
+
+public StackObject GetFrameLocal(int index)
+{
+    var undefinedObjects = stack.Where(o => o.Type == StackObject.StackObjectType.Undefined).ToList();
+    if (index >= undefinedObjects.Count)
+    {
+        throw new IndexOutOfRangeException($"No hay suficiente espacio en el frame local para el índice {index}");
+    }
+    return undefinedObjects[index];
+}
+
 
 }
