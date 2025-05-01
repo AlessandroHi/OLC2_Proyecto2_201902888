@@ -1,9 +1,16 @@
 .text
 .global _start
 _start:
+// Inicia bloque
+// Declarar variable: num2
+// Integer: 2
+MOV x0, #2
+STR x0, [SP, #-8]!
 // Print
-// Integer: 1
-MOV x0, #1
+// Identifier: num2
+MOV x0, #0
+ADD x0, sp, x0
+LDR x0, [x0, #0]
 STR x0, [SP, #-8]!
 // Integer: 2
 MOV x0, #2
@@ -11,6 +18,24 @@ STR x0, [SP, #-8]!
 LDR x1, [SP], #8
 LDR x0, [SP], #8
 ADD x0, x0, x1
+STR x0, [SP, #-8]!
+// Poping value
+LDR x0, [SP], #8
+MOV X0, x0
+BL print_integer
+// Remover 8 bytes del stack
+MOV x0, #8
+ADD sp, sp, x0
+// Remover 8 bytes del stack
+// Declarar variable: num2
+// Integer: 1
+MOV x0, #1
+STR x0, [SP, #-8]!
+// Print
+// Identifier: num2
+MOV x0, #0
+ADD x0, sp, x0
+LDR x0, [x0, #0]
 STR x0, [SP, #-8]!
 // Poping value
 LDR x0, [SP], #8

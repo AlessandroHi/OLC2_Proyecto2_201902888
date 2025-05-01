@@ -4,6 +4,7 @@ using System.Reflection.Metadata;
 using System.Security.Cryptography.X509Certificates;
 using analyzer;
 using Antlr4.Runtime.Misc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.Extensions.Logging.Console;
 using Proyecto1_OLC2;
 
@@ -36,6 +37,12 @@ public class CompilerVisitor : LanguageBaseVisitor<Object?>
     // VisitVarDcl
     public override Object? VisitVarDcl(LanguageParser.VarDclContext context)
     {
+         var varName = context.ID().GetText();
+         c.Comment($"Declarar variable: {varName}");
+
+         Visit(context.expr());
+         c.TagObject(varName);
+
          return null;
     }
 
@@ -43,6 +50,21 @@ public class CompilerVisitor : LanguageBaseVisitor<Object?>
     // VisitBlockStmt
     public override Object? VisitBlockStmt(LanguageParser.BlockStmtContext context)
     {
+         c.Comment("Inicia bloque");
+         c.NewScope();
+           foreach(var dcl in context.dcl())
+           {
+               Visit(dcl);
+           }
+           int byteToremove = c.endScope();
+
+           if(byteToremove > 0)
+           {
+              c.Comment($"Remover {byteToremove} bytes del stack");
+              c.Mov(Register.X0, byteToremove);
+              c.Add(Register.SP, Register.SP, Register.X0);
+               c.Comment($"Remover {byteToremove} bytes del stack");
+           }
          return null;
     }
 
@@ -50,7 +72,24 @@ public class CompilerVisitor : LanguageBaseVisitor<Object?>
     // VisitAssign
     public override Object? VisitAssign(LanguageParser.AssignContext context)
     {
+         var assig = context.expr(0);
 
+         if(assig is LanguageParser.IdentifierContext idContext){
+          string varName = idContext.ID().GetText();
+          c.Comment($"Asignar valor a variable: {varName}");
+          Visit(context.expr(1));
+          var value = c.PopObject(Register.X0); // pop a nivel virtual
+          var (offset, varObject) = c.GetObject(varName);
+
+          c.Mov(Register.X1, offset);
+          c.Add(Register.X1, Register.SP, Register.X1);
+          c.Str(Register.X0, Register.X1);
+
+          c.Push(Register.X0);
+          c.PushObject(c.CloneObject(varObject));
+  
+         }
+         
          return null;
     }
 
@@ -58,13 +97,27 @@ public class CompilerVisitor : LanguageBaseVisitor<Object?>
     // VisitExprStmt
     public override Object? VisitExprStmt(LanguageParser.ExprStmtContext context)
     {
+           Visit(context.expr());
+           c.PopObject(Register.X0); // pop a nivel virtual
+
          return null;
     }
 
 
     // VisitIdentifier
     public override Object? VisitIdentifier(LanguageParser.IdentifierContext context)
-    {
+    {     
+     var id = context.ID().GetText();
+     c.Comment($"Identifier: {id}");
+     var (offset, obj) = c.GetObject(id);
+     c.Mov(Register.X0, offset);
+     c.Add(Register.X0, Register.SP, Register.X0);
+     c.Ldr(Register.X0, Register.X0); // load value
+     c.Push(Register.X0); // push value
+
+     var newObj = c.CloneObject(obj);
+     newObj.Id = null;
+     c.PushObject(newObj);
          return null;
     }
 
@@ -82,8 +135,13 @@ public class CompilerVisitor : LanguageBaseVisitor<Object?>
        c.Comment("Print");
        Visit(context.expr());
        c.Comment("Poping value");
-       c.Pop(Register.X0);
-       c.PrintInteger(Register.X0); //validar tipos 
+       var value = c.PopObject(Register.X0); // pop a nivel virtual
+       
+
+       if (value.Type == StackObject.StackObjectType.Int)
+       {
+          c.PrintInteger(Register.X0);
+       }
        return null;
      }
 
@@ -93,9 +151,10 @@ public class CompilerVisitor : LanguageBaseVisitor<Object?>
     {
       var value = context.INT().GetText();
       c.Comment($"Integer: {value}");
-      c.Mov(Register.X0, int.Parse(value));
-      c.Push(Register.X0);
-        return null;
+      var IntObject = c.IntObject();
+      c.PushConstant(IntObject, int.Parse(value));
+
+      return null;
     }
 
 
@@ -142,8 +201,11 @@ public class CompilerVisitor : LanguageBaseVisitor<Object?>
 
          Visit(context.expr(1));
 
-         c.Pop(Register.X1);
-         c.Pop(Register.X0);
+         var right = c.PopObject(Register.X1); // pop a nivel virtual
+         var left = c.PopObject(Register.X0);
+
+         // se agrega validaciones semanticas 
+        
 
           if (op == "+")
            {
@@ -158,6 +220,7 @@ public class CompilerVisitor : LanguageBaseVisitor<Object?>
                 throw new Exception($"Unknown operator: {op}");
            }
           c.Push(Register.X0);
+          c.PushObject(c.CloneObject(left));
 
 
          return null;
