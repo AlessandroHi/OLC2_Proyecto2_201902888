@@ -6,6 +6,9 @@ import Image from "next/image";
 import go from "../public/img/go.png";
 import arm from "../public/img/logo.png";
 import { Console } from "console";
+import { useRef } from "react";
+
+
 
 const API_URL = "http://localhost:5159";
 
@@ -31,6 +34,18 @@ export default function Home() {
     line: 1,
     column: 1,
   });
+
+  const outputRef = useRef<HTMLPreElement>(null);
+
+
+  const handleCopyConsole = () => {
+    const text = outputRef.current?.innerText;
+    if (text) {
+      navigator.clipboard.writeText(text);
+      alert("Contenido copiado al portapapeles.");
+    }
+  };
+  
 
   const handleExecute = async () => {
     try {
@@ -138,7 +153,17 @@ export default function Home() {
             isError ? "bg-black text-red-400" : "bg-black text-green-400"
           }`}
         >
-          <pre className="whitespace-pre-wrap">{output || "Output"}</pre>
+          <div className="flex justify-end mb-2">
+            <button
+              onClick={handleCopyConsole}
+              title="Copiar al portapapeles"
+              className="text-white bg-transparent hover:text-blue-400 p-1"
+            >
+              📋
+            </button>
+          </div>
+          <pre ref={outputRef} className="whitespace-pre-wrap">{output || "Output"}</pre>
+
         </div>
       </div>
       {/* Footer */}
