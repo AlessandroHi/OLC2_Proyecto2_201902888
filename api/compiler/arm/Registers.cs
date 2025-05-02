@@ -1,5 +1,6 @@
 public static class Register
-{
+{   
+    public static string EQ => "EQ"; // Equal
     // General purpose registers
     public static string X0 => "x0";
     public static string X1 => "x1";

@@ -2,7 +2,7 @@ grammar Language;
 
 program: dcl*;
 
-dcl: varDcl |funcDcl| structDcl | slice | matrix |stmt;
+dcl: varDcl |funcDcl  |stmt;
 
 varDcl: 'var' ID type '=' expr ';'?   
       | 'var' ID type  ';'?             
@@ -10,16 +10,8 @@ varDcl: 'var' ID type '=' expr ';'?
       | ID  type ';'?;
       
 
-
-matrix: ID ':=' '[' ']' '[' ']' type '{' '{' args '}'',' ( '{' args '}' ',')* '}' ';'?;
-
-
-
-slice:  'var' ID '[' ']' type ';'? ; 
-
 funcDcl: 'func' ID '(' params? ')' type? '{' dcl* '}' ';'? ;
 
-structDcl: 'type' ID 'struct' '{' varDcl* '}' ;
 
 
 params: param (',' param)*;
@@ -37,6 +29,8 @@ stmt:
     | 'break'  ';'?                                         # BreakStmt
     | 'continue'  ';'?                                      # ContinueStmt
     | 'fmt.Println(' expr (',' expr)* ')' ';'?                    # Print
+    | 'slice.Index' '(' expr ',' expr ')'	# SliceIndex
+    | ID '[' expr ']' '=' expr ';'?			# SliceAsign
     | 'return' expr? ';'?                                   # ReturnStmt; 
 
 cases: 'case' expr ':' stmt*; 
@@ -55,12 +49,12 @@ expr:
     | '!' expr                                  # Not
     | ID op = ('+=' | '-=') expr                # IncDecAssign
     | expr '=' expr ';'?                              # Assign
-    | '['  ']' type '{' args '}'                # Slices
-    | ID '[' expr ']'                           # Index
-    | ID '[' expr ']' '[' expr ']'              # MatrixIndex
+    | sliceDcl									# SliceDeclStmt
+    | ID '[' expr ']' 							# AccesoSlice 
+    | 'strconv.Atoi' '(' expr ')'              # AtoiCall
+    | 'strconv.ParseFloat' '(' expr ')'              # ParseFloatCall
     | ID '++'                                   # Increment
     | ID '--'                                   # Decrement
-    | ID '{' props '}'                          # InStruct
     | BOOL                                      # Boolean
     | FLOAT                                     # Float
     | STRING                                    # String
@@ -69,6 +63,9 @@ expr:
     | Nil                                       # Nill
     | RUNE                                      # Rune
     | '(' expr ')'                              # Parens;
+
+
+sliceDcl: ID ':=' '[' ']' type '{' expr (',' expr)* '}' ';'?;
 
 call: '(' args? ')' #FuncCall | '.' ID #Get;
 

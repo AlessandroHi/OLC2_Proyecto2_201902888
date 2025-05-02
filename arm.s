@@ -1,481 +1,613 @@
 .data
 heap: .space 4096
-newline: .asciz "\n"
-space: .asciz " "
+
 .text
 .global _start
 _start:
    adr x10, heap
+// Declaración de función
+// Función: sumar
+// Declaración de función
+// Función: obtenerNumero
+// Declaración de función
+// Función: factorial
+// Declaración de función
+// Función: ackermann
+// Declarar variable: sumado
+// Llamada a función
+MOV x0, #16
+SUB sp, sp, x0
+// Integer: 1
+MOV x0, #1
+STR x0, [SP, #-8]!
+// Pushing object of type Int to stack
+// Integer: 2
+MOV x0, #2
+STR x0, [SP, #-8]!
+// Pushing object of type Int to stack
+MOV x0, #32
+ADD sp, sp, x0
+MOV x0, #8
+SUB x0, sp, x0
+ADR x1, L23
+STR x1, [SP, #-8]!
+STR x29, [SP, #-8]!
+ADD x29, x0, xzr
+MOV x0, #24
+SUB sp, sp, x0
+// Llamando a función: sumar
+BL sumar
+// Fin de función: sumar
+L23:
+MOV x4, #32
+SUB x4, x29, x4
+LDR x4, [x4, #0]
+MOV x1, #8
+SUB x1, sp, x1
+LDR x29, [x1, #0]
+MOV x0, #40
+ADD sp, sp, x0
+STR x4, [SP, #-8]!
+// Pushing object of type Int to stack
+// Fin de llamada a función
 // Print
-// String: Impresión de múltiples valores
-STR x10, [SP, #-8]!
-// Pushing character 73 to heap
-MOV w0, #73
-STRB w0, [x10]
-MOV x0, #1
-ADD x10, x10, x0
-// Pushing character 109 to heap
-MOV w0, #109
-STRB w0, [x10]
-MOV x0, #1
-ADD x10, x10, x0
-// Pushing character 112 to heap
-MOV w0, #112
-STRB w0, [x10]
-MOV x0, #1
-ADD x10, x10, x0
-// Pushing character 114 to heap
-MOV w0, #114
-STRB w0, [x10]
-MOV x0, #1
-ADD x10, x10, x0
-// Pushing character 101 to heap
-MOV w0, #101
-STRB w0, [x10]
-MOV x0, #1
-ADD x10, x10, x0
-// Pushing character 115 to heap
-MOV w0, #115
-STRB w0, [x10]
-MOV x0, #1
-ADD x10, x10, x0
-// Pushing character 105 to heap
-MOV w0, #105
-STRB w0, [x10]
-MOV x0, #1
-ADD x10, x10, x0
-// Pushing character 243 to heap
-MOV w0, #243
-STRB w0, [x10]
-MOV x0, #1
-ADD x10, x10, x0
-// Pushing character 110 to heap
-MOV w0, #110
-STRB w0, [x10]
-MOV x0, #1
-ADD x10, x10, x0
-// Pushing character 32 to heap
-MOV w0, #32
-STRB w0, [x10]
-MOV x0, #1
-ADD x10, x10, x0
-// Pushing character 100 to heap
-MOV w0, #100
-STRB w0, [x10]
-MOV x0, #1
-ADD x10, x10, x0
-// Pushing character 101 to heap
-MOV w0, #101
-STRB w0, [x10]
-MOV x0, #1
-ADD x10, x10, x0
-// Pushing character 32 to heap
-MOV w0, #32
-STRB w0, [x10]
-MOV x0, #1
-ADD x10, x10, x0
-// Pushing character 109 to heap
-MOV w0, #109
-STRB w0, [x10]
-MOV x0, #1
-ADD x10, x10, x0
-// Pushing character 250 to heap
-MOV w0, #250
-STRB w0, [x10]
-MOV x0, #1
-ADD x10, x10, x0
-// Pushing character 108 to heap
-MOV w0, #108
-STRB w0, [x10]
-MOV x0, #1
-ADD x10, x10, x0
-// Pushing character 116 to heap
-MOV w0, #116
-STRB w0, [x10]
-MOV x0, #1
-ADD x10, x10, x0
-// Pushing character 105 to heap
-MOV w0, #105
-STRB w0, [x10]
-MOV x0, #1
-ADD x10, x10, x0
-// Pushing character 112 to heap
-MOV w0, #112
-STRB w0, [x10]
-MOV x0, #1
-ADD x10, x10, x0
-// Pushing character 108 to heap
-MOV w0, #108
-STRB w0, [x10]
-MOV x0, #1
-ADD x10, x10, x0
-// Pushing character 101 to heap
-MOV w0, #101
-STRB w0, [x10]
-MOV x0, #1
-ADD x10, x10, x0
-// Pushing character 115 to heap
-MOV w0, #115
-STRB w0, [x10]
-MOV x0, #1
-ADD x10, x10, x0
-// Pushing character 32 to heap
-MOV w0, #32
-STRB w0, [x10]
-MOV x0, #1
-ADD x10, x10, x0
-// Pushing character 118 to heap
-MOV w0, #118
-STRB w0, [x10]
-MOV x0, #1
-ADD x10, x10, x0
-// Pushing character 97 to heap
-MOV w0, #97
-STRB w0, [x10]
-MOV x0, #1
-ADD x10, x10, x0
-// Pushing character 108 to heap
-MOV w0, #108
-STRB w0, [x10]
-MOV x0, #1
-ADD x10, x10, x0
-// Pushing character 111 to heap
-MOV w0, #111
-STRB w0, [x10]
-MOV x0, #1
-ADD x10, x10, x0
-// Pushing character 114 to heap
-MOV w0, #114
-STRB w0, [x10]
-MOV x0, #1
-ADD x10, x10, x0
-// Pushing character 101 to heap
-MOV w0, #101
-STRB w0, [x10]
-MOV x0, #1
-ADD x10, x10, x0
-// Pushing character 115 to heap
-MOV w0, #115
-STRB w0, [x10]
-MOV x0, #1
-ADD x10, x10, x0
-// Pushing character 0 to heap
-MOV w0, #0
-STRB w0, [x10]
-MOV x0, #1
-ADD x10, x10, x0
-// Pushing object of type String to stack
-// Popping object of type String from stack
-// Popping object of type String from stack
+// Identifier: sumado
+MOV x0, #0
+ADD x0, sp, x0
+LDR x0, [x0, #0]
+STR x0, [SP, #-8]!
+// Pushing object of type Int to stack
+// Popping object of type Int from stack
+// Popping object of type Int from stack
 LDR x0, [SP], #8
 MOV X0, x0
-BL print_string
+BL print_integer
 // Salto de línea
 ADR x1, newline
 MOV x2, #1
 MOV x0, #1
 MOV w8, #64
 SVC #0
-// Print
-// String: Números:
-STR x10, [SP, #-8]!
-// Pushing character 78 to heap
-MOV w0, #78
-STRB w0, [x10]
-MOV x0, #1
-ADD x10, x10, x0
-// Pushing character 250 to heap
-MOV w0, #250
-STRB w0, [x10]
-MOV x0, #1
-ADD x10, x10, x0
-// Pushing character 109 to heap
-MOV w0, #109
-STRB w0, [x10]
-MOV x0, #1
-ADD x10, x10, x0
-// Pushing character 101 to heap
-MOV w0, #101
-STRB w0, [x10]
-MOV x0, #1
-ADD x10, x10, x0
-// Pushing character 114 to heap
-MOV w0, #114
-STRB w0, [x10]
-MOV x0, #1
-ADD x10, x10, x0
-// Pushing character 111 to heap
-MOV w0, #111
-STRB w0, [x10]
-MOV x0, #1
-ADD x10, x10, x0
-// Pushing character 115 to heap
-MOV w0, #115
-STRB w0, [x10]
-MOV x0, #1
-ADD x10, x10, x0
-// Pushing character 58 to heap
-MOV w0, #58
-STRB w0, [x10]
-MOV x0, #1
-ADD x10, x10, x0
-// Pushing character 0 to heap
-MOV w0, #0
-STRB w0, [x10]
-MOV x0, #1
-ADD x10, x10, x0
-// Pushing object of type String to stack
-// Popping object of type String from stack
-// Popping object of type String from stack
-LDR x0, [SP], #8
-MOV X0, x0
-BL print_string
-// Imprimir espacio
-MOV x0, #32
-MOV x1, #1
-MOV x2, #1
-MOV w8, #64
-SVC #0
-// Float: 3.14
-MOVZ x0, #34079, LSL #0
-MOVK x0, #20971, LSL #16
-MOVK x0, #7864, LSL #32
-MOVK x0, #16393, LSL #48
+
+   // Finalizar programa
+   mov x0, #0
+   mov x8, #93
+   svc #0
+
+// Funciones definidas
+// Pushing object of type Int to stack
+// Pushing object of type Int to stack
+// Inicio de función: sumar
+sumar:
+// Estoy en return
+// Estoy en AddSub
+// Evaluando expresión izquierda
+// Identifier: a
+MOV x0, #2
+SUB x0, x29, x0
+LDR x0, [x0, #0]
 STR x0, [SP, #-8]!
-// Pushing object of type Float to stack
-// Popping object of type Float from stack
-// Popping object of type Float from stack
-LDR d0, [SP], #8
-BL print_double
-// Salto de línea
-ADR x1, newline
-MOV x2, #1
-MOV x0, #1
-MOV w8, #64
-SVC #0
-// Print
-// String: Booleano:
-STR x10, [SP, #-8]!
-// Pushing character 66 to heap
-MOV w0, #66
-STRB w0, [x10]
-MOV x0, #1
-ADD x10, x10, x0
-// Pushing character 111 to heap
-MOV w0, #111
-STRB w0, [x10]
-MOV x0, #1
-ADD x10, x10, x0
-// Pushing character 111 to heap
-MOV w0, #111
-STRB w0, [x10]
-MOV x0, #1
-ADD x10, x10, x0
-// Pushing character 108 to heap
-MOV w0, #108
-STRB w0, [x10]
-MOV x0, #1
-ADD x10, x10, x0
-// Pushing character 101 to heap
-MOV w0, #101
-STRB w0, [x10]
-MOV x0, #1
-ADD x10, x10, x0
-// Pushing character 97 to heap
-MOV w0, #97
-STRB w0, [x10]
-MOV x0, #1
-ADD x10, x10, x0
-// Pushing character 110 to heap
-MOV w0, #110
-STRB w0, [x10]
-MOV x0, #1
-ADD x10, x10, x0
-// Pushing character 111 to heap
-MOV w0, #111
-STRB w0, [x10]
-MOV x0, #1
-ADD x10, x10, x0
-// Pushing character 58 to heap
-MOV w0, #58
-STRB w0, [x10]
-MOV x0, #1
-ADD x10, x10, x0
-// Pushing character 0 to heap
-MOV w0, #0
-STRB w0, [x10]
-MOV x0, #1
-ADD x10, x10, x0
-// Pushing object of type String to stack
-// Popping object of type String from stack
-// Popping object of type String from stack
+// Pushing object of type Int to stack
+// Evaluando expresión derecha
+// Identifier: b
+MOV x0, #3
+SUB x0, x29, x0
+LDR x0, [x0, #0]
+STR x0, [SP, #-8]!
+// Pushing object of type Int to stack
+// Popping object of type Int from stack
+// Popping object of type Int from stack
 LDR x0, [SP], #8
-MOV X0, x0
-BL print_string
-// Imprimir espacio
-MOV x0, #32
-MOV x1, #1
-MOV x2, #1
-MOV w8, #64
-SVC #0
-// Boolean: true
+// Popping object of type Int from stack
+// Popping object of type Int from stack
+LDR x1, [SP], #8
+ADD x0, x1, x0
+STR x0, [SP, #-8]!
+// Pushing object of type Int to stack
+// Popping object of type Int from stack
+// Popping object of type Int from stack
+LDR x0, [SP], #8
+MOV x1, #32
+SUB x1, x29, x1
+STR x0, [x1, #0]
+B L0
+// End of return statement
+L0:
+ADD x0, x29, xzr
+LDR x30, [x0, #0]
+BR x30
+// Fin de función: sumar
+// Popping object of type Int from stack
+// Popping object of type Int from stack
+// Inicio de función: obtenerNumero
+obtenerNumero:
+// Estoy en return
+// Integer: 42
+MOV x0, #42
+STR x0, [SP, #-8]!
+// Pushing object of type Int to stack
+// Popping object of type Int from stack
+// Popping object of type Int from stack
+LDR x0, [SP], #8
+MOV x1, #16
+SUB x1, x29, x1
+STR x0, [x1, #0]
+B L1
+// End of return statement
+L1:
+ADD x0, x29, xzr
+LDR x30, [x0, #0]
+BR x30
+// Fin de función: obtenerNumero
+// Pushing object of type Int to stack
+// Inicio de función: factorial
+factorial:
+// Estoy en If
+// Estoy en Relacional
+// Identifier: n
+MOV x0, #2
+SUB x0, x29, x0
+LDR x0, [x0, #0]
+STR x0, [SP, #-8]!
+// Pushing object of type Int to stack
+// Integer: 1
 MOV x0, #1
 STR x0, [SP, #-8]!
+// Pushing object of type Int to stack
+// Popping object of type Int from stack
+// Popping object of type Int from stack
+LDR x1, [SP], #8
+// Popping object of type Int from stack
+// Popping object of type Int from stack
+LDR x0, [SP], #8
+CMP x0, x1
+BLE L3
+MOV x0, #0
+STR x0, [SP, #-8]!
+B L4
+L3:
+MOV x0, #1
+STR x0, [SP, #-8]!
+L4:
+// Pushing object of type Bool to stack
+LDR x0, [SP], #8
+CBZ x0, L5
+// Inicia bloque
+// Estoy en return
+// Integer: 1
+MOV x0, #1
+STR x0, [SP, #-8]!
+// Pushing object of type Int to stack
+// Popping object of type Int from stack
+// Popping object of type Int from stack
+LDR x0, [SP], #8
+MOV x1, #24
+SUB x1, x29, x1
+STR x0, [x1, #0]
+B L2
+// End of return statement
+L5:
+// Estoy en return
+// Estoy MulDivMod
+// izquierda: 
+// Identifier: n
+MOV x0, #2
+SUB x0, x29, x0
+LDR x0, [x0, #0]
+STR x0, [SP, #-8]!
+// Pushing object of type Int to stack
+// derecha: 
+// Llamada a función
+MOV x0, #16
+SUB sp, sp, x0
+// Estoy en AddSub
+// Evaluando expresión izquierda
+// Identifier: n
+MOV x0, #2
+SUB x0, x29, x0
+LDR x0, [x0, #0]
+STR x0, [SP, #-8]!
+// Pushing object of type Int to stack
+// Evaluando expresión derecha
+// Integer: 1
+MOV x0, #1
+STR x0, [SP, #-8]!
+// Pushing object of type Int to stack
+// Popping object of type Int from stack
+// Popping object of type Int from stack
+LDR x0, [SP], #8
+// Popping object of type Int from stack
+// Popping object of type Int from stack
+LDR x1, [SP], #8
+SUB x0, x1, x0
+STR x0, [SP, #-8]!
+// Pushing object of type Int to stack
+MOV x0, #24
+ADD sp, sp, x0
+MOV x0, #8
+SUB x0, sp, x0
+ADR x1, L6
+STR x1, [SP, #-8]!
+STR x29, [SP, #-8]!
+ADD x29, x0, xzr
+MOV x0, #16
+SUB sp, sp, x0
+// Llamando a función: factorial
+BL factorial
+// Fin de función: factorial
+L6:
+MOV x4, #24
+SUB x4, x29, x4
+LDR x4, [x4, #0]
+MOV x1, #8
+SUB x1, sp, x1
+LDR x29, [x1, #0]
+MOV x0, #32
+ADD sp, sp, x0
+STR x4, [SP, #-8]!
+// Pushing object of type Int to stack
+// Fin de llamada a función
+// Popping object of type Int from stack
+// Popping object of type Int from stack
+LDR x1, [SP], #8
+// Popping object of type Int from stack
+// Popping object of type Int from stack
+LDR x0, [SP], #8
+MUL x0, x0, x1
+STR x0, [SP, #-8]!
+// Pushing object of type Int to stack
+// Popping object of type Int from stack
+// Popping object of type Int from stack
+LDR x0, [SP], #8
+MOV x1, #24
+SUB x1, x29, x1
+STR x0, [x1, #0]
+B L2
+// End of return statement
+L2:
+ADD x0, x29, xzr
+LDR x30, [x0, #0]
+BR x30
+// Fin de función: factorial
+// Popping object of type Int from stack
+// Pushing object of type Int to stack
+// Pushing object of type Int to stack
+// Inicio de función: ackermann
+ackermann:
+// Estoy en If
+// Identifier: m
+MOV x0, #2
+SUB x0, x29, x0
+LDR x0, [x0, #0]
+STR x0, [SP, #-8]!
+// Pushing object of type Int to stack
+// Integer: 0
+MOV x0, #0
+STR x0, [SP, #-8]!
+// Pushing object of type Int to stack
+// Popping object of type Int from stack
+// Popping object of type Int from stack
+LDR x1, [SP], #8
+// Popping object of type Int from stack
+// Popping object of type Int from stack
+LDR x0, [SP], #8
+CMP x0, x1
+BEQ L8
+MOV x0, #0
+STR x0, [SP, #-8]!
+B L9
+L8:
+MOV x0, #1
+STR x0, [SP, #-8]!
+L9:
+// Pushing object of type Bool to stack
+LDR x0, [SP], #8
+CBZ x0, L10
+// Inicia bloque
+// Estoy en return
+// Estoy en AddSub
+// Evaluando expresión izquierda
+// Identifier: n
+MOV x0, #3
+SUB x0, x29, x0
+LDR x0, [x0, #0]
+STR x0, [SP, #-8]!
+// Pushing object of type Int to stack
+// Evaluando expresión derecha
+// Integer: 1
+MOV x0, #1
+STR x0, [SP, #-8]!
+// Pushing object of type Int to stack
+// Popping object of type Int from stack
+// Popping object of type Int from stack
+LDR x0, [SP], #8
+// Popping object of type Int from stack
+// Popping object of type Int from stack
+LDR x1, [SP], #8
+ADD x0, x1, x0
+STR x0, [SP, #-8]!
+// Pushing object of type Int to stack
+// Popping object of type Int from stack
+// Popping object of type Int from stack
+LDR x0, [SP], #8
+MOV x1, #32
+SUB x1, x29, x1
+STR x0, [x1, #0]
+B L7
+// End of return statement
+B L11
+L10:
+// Estoy en If
+// Estoy en And
+// Estoy en Relacional
+// Identifier: m
+MOV x0, #2
+SUB x0, x29, x0
+LDR x0, [x0, #0]
+STR x0, [SP, #-8]!
+// Pushing object of type Int to stack
+// Integer: 0
+MOV x0, #0
+STR x0, [SP, #-8]!
+// Pushing object of type Int to stack
+// Popping object of type Int from stack
+// Popping object of type Int from stack
+LDR x1, [SP], #8
+// Popping object of type Int from stack
+// Popping object of type Int from stack
+LDR x0, [SP], #8
+CMP x0, x1
+BGT L12
+MOV x0, #0
+STR x0, [SP, #-8]!
+B L13
+L12:
+MOV x0, #1
+STR x0, [SP, #-8]!
+L13:
 // Pushing object of type Bool to stack
 // Popping object of type Bool from stack
 // Popping object of type Bool from stack
 LDR x0, [SP], #8
-MOV X0, x0
-BL print_boolean
-// Imprimir espacio
-MOV x0, #32
-MOV x1, #1
-MOV x2, #1
-MOV w8, #64
-SVC #0
-// String: Texto:
-STR x10, [SP, #-8]!
-// Pushing character 84 to heap
-MOV w0, #84
-STRB w0, [x10]
-MOV x0, #1
-ADD x10, x10, x0
-// Pushing character 101 to heap
-MOV w0, #101
-STRB w0, [x10]
-MOV x0, #1
-ADD x10, x10, x0
-// Pushing character 120 to heap
-MOV w0, #120
-STRB w0, [x10]
-MOV x0, #1
-ADD x10, x10, x0
-// Pushing character 116 to heap
-MOV w0, #116
-STRB w0, [x10]
-MOV x0, #1
-ADD x10, x10, x0
-// Pushing character 111 to heap
-MOV w0, #111
-STRB w0, [x10]
-MOV x0, #1
-ADD x10, x10, x0
-// Pushing character 58 to heap
-MOV w0, #58
-STRB w0, [x10]
-MOV x0, #1
-ADD x10, x10, x0
-// Pushing character 0 to heap
-MOV w0, #0
-STRB w0, [x10]
-MOV x0, #1
-ADD x10, x10, x0
-// Pushing object of type String to stack
-// Popping object of type String from stack
-// Popping object of type String from stack
-LDR x0, [SP], #8
-MOV X0, x0
-BL print_string
-// Imprimir espacio
-MOV x0, #32
-MOV x1, #1
-MOV x2, #1
-MOV w8, #64
-SVC #0
-// String: Hola
-STR x10, [SP, #-8]!
-// Pushing character 72 to heap
-MOV w0, #72
-STRB w0, [x10]
-MOV x0, #1
-ADD x10, x10, x0
-// Pushing character 111 to heap
-MOV w0, #111
-STRB w0, [x10]
-MOV x0, #1
-ADD x10, x10, x0
-// Pushing character 108 to heap
-MOV w0, #108
-STRB w0, [x10]
-MOV x0, #1
-ADD x10, x10, x0
-// Pushing character 97 to heap
-MOV w0, #97
-STRB w0, [x10]
-MOV x0, #1
-ADD x10, x10, x0
-// Pushing character 0 to heap
-MOV w0, #0
-STRB w0, [x10]
-MOV x0, #1
-ADD x10, x10, x0
-// Pushing object of type String to stack
-// Popping object of type String from stack
-// Popping object of type String from stack
-LDR x0, [SP], #8
-MOV X0, x0
-BL print_string
-// Salto de línea
-ADR x1, newline
-MOV x2, #1
-MOV x0, #1
-MOV w8, #64
-SVC #0
+CMP x0, #0
+BEQ L14
+// Identifier: n
+MOV x0, #3
+SUB x0, x29, x0
+LDR x0, [x0, #0]
+STR x0, [SP, #-8]!
+// Pushing object of type Int to stack
+// Integer: 0
 MOV x0, #0
-MOV x8, #93
-SVC #0
+STR x0, [SP, #-8]!
+// Pushing object of type Int to stack
+// Popping object of type Int from stack
+// Popping object of type Int from stack
+LDR x1, [SP], #8
+// Popping object of type Int from stack
+// Popping object of type Int from stack
+LDR x0, [SP], #8
+CMP x0, x1
+BEQ L16
+MOV x0, #0
+STR x0, [SP, #-8]!
+B L17
+L16:
+MOV x0, #1
+STR x0, [SP, #-8]!
+L17:
+// Pushing object of type Bool to stack
+// Popping object of type Bool from stack
+// Popping object of type Bool from stack
+LDR x0, [SP], #8
+CMP x0, #0
+BEQ L14
+MOV x0, #1
+B L15
+L14:
+MOV x0, #0
+L15:
+STR x0, [SP, #-8]!
+// Pushing object of type Bool to stack
+LDR x0, [SP], #8
+CBZ x0, L18
+// Inicia bloque
+// Estoy en return
+// Llamada a función
+MOV x0, #16
+SUB sp, sp, x0
+// Estoy en AddSub
+// Evaluando expresión izquierda
+// Identifier: m
+MOV x0, #2
+SUB x0, x29, x0
+LDR x0, [x0, #0]
+STR x0, [SP, #-8]!
+// Pushing object of type Int to stack
+// Evaluando expresión derecha
+// Integer: 1
+MOV x0, #1
+STR x0, [SP, #-8]!
+// Pushing object of type Int to stack
+// Popping object of type Int from stack
+// Popping object of type Int from stack
+LDR x0, [SP], #8
+// Popping object of type Int from stack
+// Popping object of type Int from stack
+LDR x1, [SP], #8
+SUB x0, x1, x0
+STR x0, [SP, #-8]!
+// Pushing object of type Int to stack
+// Integer: 1
+MOV x0, #1
+STR x0, [SP, #-8]!
+// Pushing object of type Int to stack
+MOV x0, #32
+ADD sp, sp, x0
+MOV x0, #8
+SUB x0, sp, x0
+ADR x1, L20
+STR x1, [SP, #-8]!
+STR x29, [SP, #-8]!
+ADD x29, x0, xzr
+MOV x0, #24
+SUB sp, sp, x0
+// Llamando a función: ackermann
+BL ackermann
+// Fin de función: ackermann
+L20:
+MOV x4, #32
+SUB x4, x29, x4
+LDR x4, [x4, #0]
+MOV x1, #8
+SUB x1, sp, x1
+LDR x29, [x1, #0]
+MOV x0, #40
+ADD sp, sp, x0
+STR x4, [SP, #-8]!
+// Pushing object of type Int to stack
+// Fin de llamada a función
+// Popping object of type Int from stack
+// Popping object of type Int from stack
+LDR x0, [SP], #8
+MOV x1, #32
+SUB x1, x29, x1
+STR x0, [x1, #0]
+B L7
+// End of return statement
+// Remover 8 bytes del stack
+MOV x0, #8
+ADD sp, sp, x0
+// Remover 8 bytes del stack
+B L19
+L18:
+// Inicia bloque
+// Estoy en return
+// Llamada a función
+MOV x0, #16
+SUB sp, sp, x0
+// Estoy en AddSub
+// Evaluando expresión izquierda
+// Identifier: m
+MOV x0, #2
+SUB x0, x29, x0
+LDR x0, [x0, #0]
+STR x0, [SP, #-8]!
+// Pushing object of type Int to stack
+// Evaluando expresión derecha
+// Integer: 1
+MOV x0, #1
+STR x0, [SP, #-8]!
+// Pushing object of type Int to stack
+// Popping object of type Int from stack
+// Popping object of type Int from stack
+LDR x0, [SP], #8
+// Popping object of type Int from stack
+// Popping object of type Int from stack
+LDR x1, [SP], #8
+SUB x0, x1, x0
+STR x0, [SP, #-8]!
+// Pushing object of type Int to stack
+// Llamada a función
+MOV x0, #16
+SUB sp, sp, x0
+// Identifier: m
+MOV x0, #2
+SUB x0, x29, x0
+LDR x0, [x0, #0]
+STR x0, [SP, #-8]!
+// Pushing object of type Int to stack
+// Estoy en AddSub
+// Evaluando expresión izquierda
+// Identifier: n
+MOV x0, #3
+SUB x0, x29, x0
+LDR x0, [x0, #0]
+STR x0, [SP, #-8]!
+// Pushing object of type Int to stack
+// Evaluando expresión derecha
+// Integer: 1
+MOV x0, #1
+STR x0, [SP, #-8]!
+// Pushing object of type Int to stack
+// Popping object of type Int from stack
+// Popping object of type Int from stack
+LDR x0, [SP], #8
+// Popping object of type Int from stack
+// Popping object of type Int from stack
+LDR x1, [SP], #8
+SUB x0, x1, x0
+STR x0, [SP, #-8]!
+// Pushing object of type Int to stack
+MOV x0, #32
+ADD sp, sp, x0
+MOV x0, #8
+SUB x0, sp, x0
+ADR x1, L22
+STR x1, [SP, #-8]!
+STR x29, [SP, #-8]!
+ADD x29, x0, xzr
+MOV x0, #24
+SUB sp, sp, x0
+// Llamando a función: ackermann
+BL ackermann
+// Fin de función: ackermann
+L22:
+MOV x4, #32
+SUB x4, x29, x4
+LDR x4, [x4, #0]
+MOV x1, #8
+SUB x1, sp, x1
+LDR x29, [x1, #0]
+MOV x0, #40
+ADD sp, sp, x0
+STR x4, [SP, #-8]!
+// Pushing object of type Int to stack
+// Fin de llamada a función
+MOV x0, #32
+ADD sp, sp, x0
+MOV x0, #8
+SUB x0, sp, x0
+ADR x1, L21
+STR x1, [SP, #-8]!
+STR x29, [SP, #-8]!
+ADD x29, x0, xzr
+MOV x0, #24
+SUB sp, sp, x0
+// Llamando a función: ackermann
+BL ackermann
+// Fin de función: ackermann
+L21:
+MOV x4, #32
+SUB x4, x29, x4
+LDR x4, [x4, #0]
+MOV x1, #8
+SUB x1, sp, x1
+LDR x29, [x1, #0]
+MOV x0, #40
+ADD sp, sp, x0
+STR x4, [SP, #-8]!
+// Pushing object of type Int to stack
+// Fin de llamada a función
+// Popping object of type Int from stack
+// Popping object of type Int from stack
+LDR x0, [SP], #8
+MOV x1, #32
+SUB x1, x29, x1
+STR x0, [x1, #0]
+B L7
+// End of return statement
+L19:
+L11:
+L7:
+ADD x0, x29, xzr
+LDR x30, [x0, #0]
+BR x30
+// Fin de función: ackermann
+// Popping object of type Int from stack
+// Popping object of type Int from stack
 
- 
- //Start of Standard Library
-
-//--------------------------------------------------------------
-// print_string - Prints a null-terminated string to stdout
-//
-// Input:
-//   x0 - The address of the null-terminated string to print
-//--------------------------------------------------------------
-print_string:
-    // Save link register and other registers we'll use
-    stp     x29, x30, [sp, #-16]!
-    stp     x19, x20, [sp, #-16]!
-    
-    // x19 will hold the string address
-    mov     x19, x0
-    
-print_loop:
-    // Load a byte from the string
-    ldrb    w20, [x19]
-    
-    // Check if it's the null terminator (0)
-    cbz     w20, print_done
-    
-    // Prepare for write syscall
-    mov     x0, #1              // File descriptor: 1 for stdout
-    mov     x1, x19             // Address of the character to print
-    mov     x2, #1              // Length: 1 byte
-    mov     x8, #64             // syscall: write (64 on ARM64)
-    svc     #0                  // Make the syscall
-    
-    // Move to the next character
-    add     x19, x19, #1
-    
-    // Continue the loop
-    b       print_loop
-    
-print_done:
-
-    //adr x1, newline
-    //mov x2, #1
-    //mov x0, #1
-    //mov w8, #64
-    //svc #0
-
-    // Restore saved registers
-    ldp     x19, x20, [sp], #16
-    ldp     x29, x30, [sp], #16
-    ret
-    // Return to the caller
-    
+// Biblioteca estándar
 
 //--------------------------------------------------------------
 // print_integer - Prints a signed integer to stdout
@@ -581,152 +713,5 @@ print_result:
     ldp x29, x30, [sp], #16    // Restore frame pointer and link register
     ret                        // Return to caller
     
-
-//--------------------------------------------------------------
-// print_double - Prints a double precision float to stdout
-//
-// Input:
-//   d0 - The double value to print
-//--------------------------------------------------------------
-
-print_double:
-    // Save context
-    stp x29, x30, [sp, #-16]!    
-    stp x19, x20, [sp, #-16]!
-    stp x21, x22, [sp, #-16]!
-    stp x23, x24, [sp, #-16]!
-    
-    // Check if number is negative
-    fmov x19, d0
-    tst x19, #(1 << 63)       // Comprueba el bit de signo
-    beq skip_minus
-
-    // Print minus sign
-    mov x0, #1
-    adr x1, minus_sign
-    mov x2, #1
-    mov x8, #64
-    svc #0
-
-    // Make value positive
-    fneg d0, d0
-
-skip_minus:
-    // Convert integer part
-    fcvtzs x0, d0             // x0 = int(d0)
-    bl print_integer
-
-    // Print dot '.'
-    mov x0, #1
-    adr x1, dot_char
-    mov x2, #1
-    mov x8, #64
-    svc #0
-
-    // Get fractional part: frac = d0 - float(int(d0))
-    frintm d4, d0             // d4 = floor(d0)
-    fsub d2, d0, d4           // d2 = d0 - floor(d0) (exact fraction)
-
-    // Para 2.5, d2 debe ser exactamente 0.5
-
-    // Multiplicar por 1_000_000 (6 decimales)
-    movz x1, #0x000F, lsl #16
-    movk x1, #0x4240, lsl #0   // x1 = 1000000
-    scvtf d3, x1              // d3 = 1000000.0
-    fmul d2, d2, d3           // d2 = frac * 1_000_000
-    
-    // Redondear al entero más cercano para evitar errores de precisión
-    frintn d2, d2             // d2 = round(d2)
-    fcvtzs x0, d2             // x0 = int(d2)
-
-    // Imprimir ceros a la izquierda si es necesario
-    mov x20, x0               // x20 = fracción entera
-    movz x21, #0x0001, lsl #16
-    movk x21, #0x86A0, lsl #0  // x21 = 100000
-    mov x22, #0               // inicializar contador de ceros
-    mov x23, #10              // constante para división
-
-leading_zero_loop:
-    udiv x24, x20, x21        // x24 = x20 / x21
-    cbnz x24, done_leading_zeros  // Si hay un dígito no cero, salir del bucle
-
-    // Imprimir '0'
-    mov x0, #1
-    adr x1, zero_char
-    mov x2, #1
-    mov x8, #64
-    svc #0
-
-    udiv x21, x21, x23        // x21 /= 10
-    add x22, x22, #1          // incrementar contador de ceros
-    cmp x21, #0               // verificar si llegamos al final
-    beq print_remaining       // si divisor es 0, saltar a imprimir el resto
-    b leading_zero_loop
-
-done_leading_zeros:
-    // Print the remaining fractional part
-    mov x0, x20
-    bl print_integer
-    b exit_function
-
-print_remaining:
-    // Caso especial cuando la parte fraccionaria es 0 después de imprimir ceros
-    cmp x20, #0
-    bne exit_function
-    
-    // Ya imprimimos todos los ceros necesarios
-    // No hace falta imprimir nada más
-
-    //adr x1, newline
-    //mov x2, #1
-    //mov x0, #1
-    //mov w8, #64
-    //svc #0
-
-exit_function:
-    // Restore context
-    ldp x23, x24, [sp], #16
-    ldp x21, x22, [sp], #16
-    ldp x19, x20, [sp], #16
-    ldp x29, x30, [sp], #16
-    ret
-    
-
-//--------------------------------------------------------------
-// print_boolean - Prints a bool (true/false) to stdout
-//
-// Input:
-//   x0 - The bool value to print (0 = false, != 0 = true)
-//--------------------------------------------------------------
-print_boolean:
-    cmp x0, #0
-    bne .print_true
-
-.print_false:
-    adr x1, str_false
-    mov x2, #5
-    b .print
-
-.print_true:
-    adr x1, str_true
-    mov x2, #4
-
-.print:
-    mov x0, #1          // fd = stdout
-    mov w8, #64         // syscall write
-    svc #0
-
-    //adr x1, newline
-    //mov x2, #1
-    //mov x0, #1
-    //mov w8, #64
-    //svc #0
-
-    ret
-    
-newline: .ascii "\n"
 minus_sign: .ascii "-"
-dot_char: .ascii "."
-zero_char: .ascii "0"
-str_true: .ascii "true"
-str_false: .ascii "false"
+newline: .ascii "\n"

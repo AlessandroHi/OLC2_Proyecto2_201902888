@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Routing.Constraints;
 
 public class StackObject
 {
-   public enum StackObjectType{ Int, Float, String , Bool, Rune, Undefined} // se maneja como el value grapper
+   public enum StackObjectType{ Int, Float, String , Bool, Rune, Slice,Void,Undefined} // se maneja como el value grapper
     public StackObjectType Type { get; set; }
 
     public int Length { get; set; } // tamaño en staclk
@@ -20,7 +20,7 @@ public class ARMGenerator
     public  List<string> instructions = new List<string>();
 
     public List<string> funcInstructions = new List<string>();
-    private readonly StandardLibrary stdLib = new StandardLibrary();
+    public readonly StandardLibrary stdLib = new StandardLibrary();
 
     private List<StackObject> stack = new List<StackObject>(); // stack virtual
 
@@ -193,6 +193,21 @@ public class ARMGenerator
             Depth = depth,
             Id = null
         };
+    }
+
+            public StackObject SliceObject(){
+        return new StackObject
+        {
+            Type = StackObject.StackObjectType.Slice,
+            Length = 8,
+            Depth = depth,
+            Id = null
+        };
+        
+    }
+
+        public void tagObject(string id){
+        stack.Last().Id = id;
     }
 
 
@@ -383,11 +398,21 @@ public void TagObject(string id)
     {
         instructions.Add($"FCMP {registro1}, {registro2}");
     }
+
+    public void Ldrb(string rd, string rs1)
+    {
+        instructions.Add($"LDRB {rd}, [{rs1}]");
+    }
       
 
 
 
     //-------------
+
+    public void Cset(string rd, string cond)
+    {
+        instructions.Add($"CSET {rd}, {cond}");
+    }
 
 
     public void Cmp(string rs1, string rs2)
@@ -455,6 +480,20 @@ public void TagObject(string id)
 
 
 
+    public void Fcvtns(string rd, string rs)
+    {
+        instructions.Add($"FCVTNS {rd}, {rs}");
+    }
+
+
+        public void ConcatenarString()
+    {
+        stdLib.Use("concat_strings");
+        instructions.Add($"BL concat_strings");
+    }
+
+
+
 
     public void Svc(){
         instructions.Add($"SVC #0");
@@ -510,28 +549,48 @@ public void TagObject(string id)
         instructions.Add($"// {comment}");
     }
 
-    public override string ToString()
+public override string ToString()
+{
+    var sb = new StringBuilder();
+
+    // Sección de datos
+    sb.AppendLine(".data");
+    sb.AppendLine("heap: .space 4096"); // Espacio para el heap
+
+    sb.AppendLine();
+
+    // Sección de texto
+    sb.AppendLine(".text");
+    sb.AppendLine(".global _start");
+    sb.AppendLine("_start:");
+    sb.AppendLine("   adr x10, heap"); // Inicializar el heap pointer (HP)
+
+    // Instrucciones principales
+    foreach (var instruction in instructions)
     {
-       var sb = new StringBuilder();
-       sb.AppendLine(".data");
-       sb.AppendLine("heap: .space 4096");
-       sb.AppendLine(".text");
-       sb.AppendLine(".global _start");
-       sb.AppendLine("_start:");
-       sb.AppendLine("   adr x10, heap");
-
-       EndProgram();
-
-       foreach (var instruction in instructions)
-         {
-              sb.AppendLine(instruction);
-         }
-         sb.AppendLine("\n \n //Start of Standard Library");
-         sb.AppendLine(stdLib.GetFunctionDefinitions());     
-
-        return sb.ToString();
-
+        sb.AppendLine(instruction);
     }
+
+    // Finalizar el programa
+    sb.AppendLine();
+    sb.AppendLine("   // Finalizar programa");
+    sb.AppendLine("   mov x0, #0"); // Código de salida
+    sb.AppendLine("   mov x8, #93"); // Syscall exit
+    sb.AppendLine("   svc #0");
+
+    // Instrucciones de funciones
+    sb.AppendLine("\n// Funciones definidas");
+    foreach (var funcInstruction in funcInstructions)
+    {
+        sb.AppendLine(funcInstruction);
+    }
+
+    // Biblioteca estándar
+    sb.AppendLine("\n// Biblioteca estándar");
+    sb.AppendLine(stdLib.GetFunctionDefinitions());
+
+    return sb.ToString();
+}
 
 public StackObject GetFrameLocal(int index)
 {
@@ -542,6 +601,5 @@ public StackObject GetFrameLocal(int index)
     }
     return undefinedObjects[index];
 }
-
 
 }

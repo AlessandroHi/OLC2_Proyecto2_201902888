@@ -1,0 +1,12 @@
+puntos := 0
+
+	fmt.Println("=== Archivo de prueba de slices ===")
+
+	// 1. Creación de slices (6 puntos)
+	fmt.Println("==== Creación de slices ====")
+	puntosCreacion := 0
+
+	fmt.Println("Creación con literales:")
+	numeros := []int{1, 2, 3, 4, 5}
+	fmt.Println("###Validacion Manual")
+	fmt.Println("numeros:", numeros)
