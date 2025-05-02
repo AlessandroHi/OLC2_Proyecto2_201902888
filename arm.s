@@ -68,6 +68,161 @@ MOV x2, #1
 MOV x0, #1
 MOV w8, #64
 SVC #0
+// Declarar variable: numero
+// Llamada a strconv.Atoi
+// String: 123
+STR x10, [SP, #-8]!
+// Pushing character 49 to heap
+MOV w0, #49
+STRB w0, [x10]
+MOV x0, #1
+ADD x10, x10, x0
+// Pushing character 50 to heap
+MOV w0, #50
+STRB w0, [x10]
+MOV x0, #1
+ADD x10, x10, x0
+// Pushing character 51 to heap
+MOV w0, #51
+STRB w0, [x10]
+MOV x0, #1
+ADD x10, x10, x0
+// Pushing character 0 to heap
+MOV w0, #0
+STRB w0, [x10]
+MOV x0, #1
+ADD x10, x10, x0
+// Pushing object of type String to stack
+// Popping object of type String from stack
+// Popping object of type String from stack
+LDR x0, [SP], #8
+// Convertir cadena a entero usando atoi
+BL atoi
+STR x0, [SP, #-8]!
+// Pushing object of type Int to stack
+// Print
+// String: Número:
+STR x10, [SP, #-8]!
+// Pushing character 78 to heap
+MOV w0, #78
+STRB w0, [x10]
+MOV x0, #1
+ADD x10, x10, x0
+// Pushing character 250 to heap
+MOV w0, #250
+STRB w0, [x10]
+MOV x0, #1
+ADD x10, x10, x0
+// Pushing character 109 to heap
+MOV w0, #109
+STRB w0, [x10]
+MOV x0, #1
+ADD x10, x10, x0
+// Pushing character 101 to heap
+MOV w0, #101
+STRB w0, [x10]
+MOV x0, #1
+ADD x10, x10, x0
+// Pushing character 114 to heap
+MOV w0, #114
+STRB w0, [x10]
+MOV x0, #1
+ADD x10, x10, x0
+// Pushing character 111 to heap
+MOV w0, #111
+STRB w0, [x10]
+MOV x0, #1
+ADD x10, x10, x0
+// Pushing character 58 to heap
+MOV w0, #58
+STRB w0, [x10]
+MOV x0, #1
+ADD x10, x10, x0
+// Pushing character 0 to heap
+MOV w0, #0
+STRB w0, [x10]
+MOV x0, #1
+ADD x10, x10, x0
+// Pushing object of type String to stack
+// Popping object of type String from stack
+// Popping object of type String from stack
+LDR x0, [SP], #8
+MOV X0, x0
+BL print_string
+// Imprimir espacio
+MOV x0, #32
+MOV x1, #1
+MOV x2, #1
+MOV w8, #64
+SVC #0
+// Identifier: numero
+MOV x0, #0
+ADD x0, sp, x0
+LDR x0, [x0, #0]
+STR x0, [SP, #-8]!
+// Pushing object of type Int to stack
+// Popping object of type Int from stack
+// Popping object of type Int from stack
+LDR x0, [SP], #8
+MOV X0, x0
+BL print_integer
+// Salto de línea
+ADR x1, newline
+MOV x2, #1
+MOV x0, #1
+MOV w8, #64
+SVC #0
+// Declarar variable: numero2
+// Llamada a strconv.ParseFloat
+// String: 123.45
+STR x10, [SP, #-8]!
+// Pushing character 49 to heap
+MOV w0, #49
+STRB w0, [x10]
+MOV x0, #1
+ADD x10, x10, x0
+// Pushing character 50 to heap
+MOV w0, #50
+STRB w0, [x10]
+MOV x0, #1
+ADD x10, x10, x0
+// Pushing character 51 to heap
+MOV w0, #51
+STRB w0, [x10]
+MOV x0, #1
+ADD x10, x10, x0
+// Pushing character 46 to heap
+MOV w0, #46
+STRB w0, [x10]
+MOV x0, #1
+ADD x10, x10, x0
+// Pushing character 52 to heap
+MOV w0, #52
+STRB w0, [x10]
+MOV x0, #1
+ADD x10, x10, x0
+// Pushing character 53 to heap
+MOV w0, #53
+STRB w0, [x10]
+MOV x0, #1
+ADD x10, x10, x0
+// Pushing character 0 to heap
+MOV w0, #0
+STRB w0, [x10]
+MOV x0, #1
+ADD x10, x10, x0
+// Pushing object of type String to stack
+// Popping object of type String from stack
+// Popping object of type String from stack
+LDR x0, [SP], #8
+// Convertir cadena a flotante usando parse_float
+BL parse_float
+STR d0, [SP, #-8]!
+// Pushing object of type Float to stack
+// Llamada a función
+// Popping object of type Float from stack
+// Popping object of type Float from stack
+LDR x0, [SP], #8
 
    // Finalizar programa
    mov x0, #0
@@ -713,5 +868,261 @@ print_result:
     ldp x29, x30, [sp], #16    // Restore frame pointer and link register
     ret                        // Return to caller
     
+
+//--------------------------------------------------------------
+// atoi - Converts a null-terminated string to an integer
+//
+// Input:
+//   x0 - Address of the null-terminated string
+// Output:
+//   x0 - The integer value
+//--------------------------------------------------------------
+atoi:
+    stp x29, x30, [sp, #-16]!
+    stp x19, x20, [sp, #-16]!
+    stp x21, x22, [sp, #-16]!
+
+    mov x19, x0        // x19 = puntero a la cadena
+    mov x20, #0        // x20 = resultado acumulado
+    mov x21, #0        // x21 = signo (0 = positivo, 1 = negativo)
+    mov x1, #0         // x1 = sin error por defecto
+
+    // Leer primer caracter
+    ldrb w0, [x19]
+    cmp w0, #'0'
+    b.lt .check_minus
+    b .parse_digits
+
+.check_minus:
+    cmp w0, #'-'
+    b.ne .check_plus
+    mov x21, #1        // es negativo
+    add x19, x19, #1   // avanzar al siguiente caracter
+    b .parse_digits
+
+.check_plus:
+    cmp w0, #'+'       // opcional
+    b.ne .parse_digits
+    add x19, x19, #1
+
+.parse_digits:
+    ldrb w0, [x19]
+    cbz w0, .done      // fin de cadena
+
+    cmp w0, #'.'       // detectar decimal
+    beq .error
+
+    cmp w0, #'0'
+    blt .error
+    cmp w0, #'9'
+    bgt .error
+
+    // convertir ASCII a número
+    sub w0, w0, #'0'
+
+    // multiplicar acumulador por 10
+    mov x22, #10
+    mul x20, x20, x22
+
+    // sumar dígito (extensión de 32 a 64 bits)
+    add x20, x20, w0, uxtw
+
+    // avanzar al siguiente caracter
+    add x19, x19, #1
+    b .parse_digits
+
+.done:
+    cmp x21, #0
+    beq .return
+    neg x20, x20
+
+.return:
+    mov x0, x20        // devolver resultado en x0
+    b .cleanup
+
+.error:
+    mov x1, #1         // error: valor inválido
+    mov x0, #0         // resultado = 0
+
+.cleanup:
+    ldp x21, x22, [sp], #16
+    ldp x19, x20, [sp], #16
+    ldp x29, x30, [sp], #16
+    ret
+    
+
+//--------------------------------------------------------------
+// print_string - Prints a null-terminated string to stdout
+//
+// Input:
+//   x0 - The address of the null-terminated string to print
+//--------------------------------------------------------------
+print_string:
+    // Save link register and other registers we'll use
+    stp     x29, x30, [sp, #-16]!
+    stp     x19, x20, [sp, #-16]!
+    
+    // x19 will hold the string address
+    mov     x19, x0
+    
+print_loop:
+    // Load a byte from the string
+    ldrb    w20, [x19]
+    
+    // Check if it's the null terminator (0)
+    cbz     w20, print_done
+    
+    // Prepare for write syscall
+    mov     x0, #1              // File descriptor: 1 for stdout
+    mov     x1, x19             // Address of the character to print
+    mov     x2, #1              // Length: 1 byte
+    mov     x8, #64             // syscall: write (64 on ARM64)
+    svc     #0                  // Make the syscall
+    
+    // Move to the next character
+    add     x19, x19, #1
+    
+    // Continue the loop
+    b       print_loop
+    
+print_done:
+
+    //adr x1, newline
+    //mov x2, #1
+    //mov x0, #1
+    //mov w8, #64
+    //svc #0
+
+    // Restore saved registers
+    ldp     x19, x20, [sp], #16
+    ldp     x29, x30, [sp], #16
+    ret
+    // Return to the caller
+    
+
+//--------------------------------------------------------------
+// parse_float - Converts a null-terminated string to a float
+//
+// Input:
+//   x0 - Address of the null-terminated string
+// Output:
+//   d0 - The float value
+//--------------------------------------------------------------
+// parse_float
+// Entrada: x0 = dirección de cadena null-terminada
+// Salida:  d0 = float64 resultante
+//          x1 = 0 si éxito, 1 si error
+
+parse_float:
+    // Guardar registros
+    stp x29, x30, [sp, #-16]!
+    stp x19, x20, [sp, #-16]!
+    stp x21, x22, [sp, #-16]!
+
+    mov x19, x0        // x19 = puntero a cadena
+    mov x20, #0        // parte entera
+    mov x21, #0        // signo (0 = positivo)
+    mov x1, #0         // sin error
+
+    ldr x2, =zero_double
+    ldr d0, [x2]       // d0 = 0.0
+
+    ldr x2, =one_double
+    ldr d1, [x2]       // d1 = 1.0 (divisor actual)
+
+    // Revisar si hay signo '-'
+    ldrb w0, [x19]
+    cmp w0, #'-'
+    b.ne .check_plus2
+    mov x21, #1
+    add x19, x19, #1
+    b .parse_digits2
+
+.check_plus2:
+    cmp w0, #'+'
+    b.ne .parse_digits2
+    add x19, x19, #1
+
+.parse_digits2:
+    ldrb w0, [x19]
+    cbz w0, .combine    // fin de cadena
+
+    cmp w0, #'.'
+    beq .parse_fraction
+
+    cmp w0, #'0'
+    blt .error
+    cmp w0, #'9'
+    bgt .error
+
+    sub w0, w0, #'0'     // ASCII a dígito
+
+    mov x3, #10
+    mul x20, x20, x3
+
+    uxtw x3, w0
+    add x20, x20, x3
+
+    add x19, x19, #1
+    b .parse_digits2
+
+.parse_fraction:
+    add x19, x19, #1       // pasar el '.'
+
+    ldr x2, =ten_double
+    ldr d2, [x2]           // d2 = 10.0
+
+.frac_loop:
+    ldrb w0, [x19]
+    cbz w0, .combine
+
+    cmp w0, #'0'
+    blt .error
+    cmp w0, #'9'
+    bgt .error
+
+    sub w0, w0, #'0'
+    scvtf d3, w0           // d3 = float(digito)
+    fdiv d3, d3, d1        // d3 /= divisor actual
+    fadd d0, d0, d3        // acumular fracción
+    fmul d1, d1, d2        // divisor *= 10.0
+
+    add x19, x19, #1
+    b .frac_loop
+
+.combine:
+    scvtf d3, x20          // convertir parte entera
+    fadd d0, d0, d3        // resultado = entero + fracción
+
+    cmp x21, #0
+    beq .return2
+    fneg d0, d0            // si negativo, cambiar signo
+
+.return2:
+    // Restaurar registros
+    ldp x21, x22, [sp], #16
+    ldp x19, x20, [sp], #16
+    ldp x29, x30, [sp], #16
+    ret
+
+.error:
+    ldr x2, =zero_double
+    ldr d0, [x2]
+    mov x1, #1
+    b .return2
+
+
+zero_double:
+    .double 0.0
+
+one_double:
+    .double 1.0
+
+ten_double:
+    .double 10.0
+
+    
 minus_sign: .ascii "-"
 newline: .ascii "\n"
+dot_char: .ascii "."
+zero_char: .ascii "0"

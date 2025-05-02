@@ -50,9 +50,10 @@ public class StandardLibrary
 
         } else if (function == "parse_float")
         {
-            UsedSymbols.Add("dot_char");
-            UsedSymbols.Add("zero_char");
-            UsedSymbols.Add("newline");
+            UsedSymbols.Add("zero_double");
+            UsedSymbols.Add("one_double");
+            UsedSymbols.Add("ten_double");
+
         }
     }
 
@@ -83,353 +84,7 @@ public class StandardLibrary
         return fnDefs + "\n" + symbolsDefs;
     }
 
-    /*private readonly static Dictionary<string, string> FunctionDefinitions = new Dictionary<string, string>
-    {
-        { "print_integer", @"
-//--------------------------------------------------------------
-// print_integer - Prints a signed integer to stdout
-//
-// Input:
-//   x0 - The integer value to print
-//--------------------------------------------------------------
-print_integer:
-    // Save registers
-    stp x29, x30, [sp, #-16]!  // Save frame pointer and link register
-    stp x19, x20, [sp, #-16]!  // Save callee-saved registers
-    stp x21, x22, [sp, #-16]!
-    stp x23, x24, [sp, #-16]!
-    stp x25, x26, [sp, #-16]!
-    stp x27, x28, [sp, #-16]!
-    
-    // Check if number is negative
-    mov x19, x0                // Save original number
-    cmp x19, #0                // Compare with zero
-    bge positive_number        // Branch if greater or equal to zero
-    
-    // Handle negative number
-    mov x0, #1                 // fd = 1 (stdout)
-    adr x1, minus_sign         // Address of minus sign
-    mov x2, #1                 // Length = 1
-    mov w8, #64                // Syscall write
-    svc #0
-    
-    neg x19, x19               // Make number positive
-    
-positive_number:
-    // Prepare buffer for converting result to ASCII
-    sub sp, sp, #32            // Reserve space on stack
-    mov x22, sp                // x22 points to buffer
-    
-    // Initialize digit counter
-    mov x23, #0                // Digit counter
-    
-    // Handle special case for zero
-    cmp x19, #0
-    bne convert_loop
-    
-    // If number is zero, just write '0'
-    mov w24, #48               // ASCII '0'
-    strb w24, [x22, x23]       // Store in buffer
-    add x23, x23, #1           // Increment counter
-    b print_result             // Skip conversion loop
-    
-convert_loop:
-    // Divide the number by 10
-    mov x24, #10
-    udiv x25, x19, x24         // x25 = x19 / 10 (quotient)
-    msub x26, x25, x24, x19    // x26 = x19 - (x25 * 10) (remainder)
-    
-    // Convert remainder to ASCII and store in buffer
-    add x26, x26, #48          // Convert to ASCII ('0' = 48)
-    strb w26, [x22, x23]       // Store digit in buffer
-    add x23, x23, #1           // Increment digit counter
-    
-    // Prepare for next iteration
-    mov x19, x25               // Quotient becomes the new number
-    cbnz x19, convert_loop     // If number is not zero, continue
-    
-    // Reverse the buffer since digits are in reverse order
-    mov x27, #0                // Start index
-reverse_loop:
-    sub x28, x23, x27          // x28 = length - current index
-    sub x28, x28, #1           // x28 = length - current index - 1
-    
-    cmp x27, x28               // Compare indices
-    bge print_result           // If crossed, finish reversing
-    
-    // Swap characters
-    ldrb w24, [x22, x27]       // Load character from start
-    ldrb w25, [x22, x28]       // Load character from end
-    strb w25, [x22, x27]       // Store end character at start
-    strb w24, [x22, x28]       // Store start character at end
-    
-    add x27, x27, #1           // Increment start index
-    b reverse_loop             // Continue reversing
-    
-print_result:
-    // Print the result
-    mov x0, #1                 // fd = 1 (stdout)
-    mov x1, x22                // Buffer address
-    mov x2, x23                // Buffer length
-    mov w8, #64                // Syscall write
-    svc #0
-    
-    // Clean up and restore registers
-    add sp, sp, #32            // Free buffer space
-    ldp x27, x28, [sp], #16    // Restore callee-saved registers
-    ldp x25, x26, [sp], #16
-    ldp x23, x24, [sp], #16
-    ldp x21, x22, [sp], #16
-    ldp x19, x20, [sp], #16
-    ldp x29, x30, [sp], #16    // Restore frame pointer and link register
-    ret                        // Return to caller
-    "
-    },
 
-    { "print_boolean", @"
-//--------------------------------------------------------------
-// print_boolean - Prints a bool (true/false) to stdout
-//
-// Input:
-//   x0 - The bool value to print (0 = false, != 0 = true)
-//--------------------------------------------------------------
-print_boolean:
-    // Save registers
-    stp x29, x30, [sp, #-16]!
-    stp x19, x20, [sp, #-16]!
-
-    // Comparar el valor booleano
-    cmp x0, #0
-    bne .print_true
-
-.print_false:
-    adr x1, str_false         // Dirección de false
-    mov x2, #5                // Longitud
-    b .print
-
-.print_true:
-    adr x1, str_true          // Dirección de true
-    mov x2, #4                // Longitud
-
-.print:
-    mov x0, #1                // stdout
-    mov w8, #64               // syscall write
-    svc #0
-
-    // Imprimir salto de línea
-    adr x1, newline
-    mov x2, #1
-    mov x0, #1
-    mov w8, #64
-    svc #0
-
-    // Restore
-    ldp x19, x20, [sp], #16
-    ldp x29, x30, [sp], #16
-    ret
-"},
-
-    {
-        "print_string", @"
-//--------------------------------------------------------------
-// print_string - Prints a null-terminated string to stdout
-//
-// Input:
-//   x0 - The address of the null-terminated string to print
-//--------------------------------------------------------------
-print_string:
-    // Save link register and other registers we'll use
-    stp     x29, x30, [sp, #-16]!
-    stp     x19, x20, [sp, #-16]!
-    
-    // x19 will hold the string address
-    mov     x19, x0
-    
-print_loop:
-    // Load a byte from the string
-    ldrb    w20, [x19]
-    
-    // Check if it's the null terminator (0)
-    cbz     w20, print_done
-    
-    // Prepare for write syscall
-    mov     x0, #1              // File descriptor: 1 for stdout
-    mov     x1, x19             // Address of the character to print
-    mov     x2, #1              // Length: 1 byte
-    mov     x8, #64             // syscall: write (64 on ARM64)
-    svc     #0                  // Make the syscall
-    
-    // Move to the next character
-    add     x19, x19, #1
-    
-    // Continue the loop
-    b       print_loop
-    
-print_done:
-    // Restore saved registers
-    ldp     x19, x20, [sp], #16
-    ldp     x29, x30, [sp], #16
-    ret
-    // Return to the caller
-    "},
-
-    { "concat_strings", @"
-//--------------------------------------------------------------
-// concat_strings - Concatenates two null-terminated strings
-//
-// Input:
-//   x0 - Address of first string
-//   x1 - Address of second string
-// Uses:
-//   x10 - Heap pointer (HP)
-// Output:
-//   x0 - Address of the concatenated string
-//--------------------------------------------------------------
-concat_strings:
-    // Save registers
-    stp x29, x30, [sp, #-16]!
-    stp x19, x20, [sp, #-16]!
-    stp x21, x22, [sp, #-16]!
-
-    mov x20, x10         // x20 = dest (heap pointer)
-    mov x2, x0           // x2 = src1
-
-.copy_first:
-    ldrb w3, [x2]
-    cbz w3, .copy_second_start
-    strb w3, [x10]
-    add x2, x2, #1
-    add x10, x10, #1
-    b .copy_first
-
-.copy_second_start:
-    mov x2, x1           // x2 = src2
-
-.copy_second:
-    ldrb w3, [x2]
-    strb w3, [x10]
-    add x10, x10, #1
-    cbz w3, .done
-    add x2, x2, #1
-    b .copy_second
-
-.done:
-    mov x0, x20          // x0 = pointer to concatenated string
-
-    // Restore and return
-    ldp x21, x22, [sp], #16
-    ldp x19, x20, [sp], #16
-    ldp x29, x30, [sp], #16
-    ret
-"},
-
-
-    {
-        "print_double", @"
-//--------------------------------------------------------------
-// print_double - Prints a double precision float to stdout
-//
-// Input:
-//   d0 - The double value to print
-//--------------------------------------------------------------
-print_double:
-    // Save context
-    stp x29, x30, [sp, #-16]!    
-    stp x19, x20, [sp, #-16]!
-    stp x21, x22, [sp, #-16]!
-    stp x23, x24, [sp, #-16]!
-    
-    // Check if number is negative
-    fmov x19, d0
-    tst x19, #(1 << 63)       // Comprueba el bit de signo
-    beq skip_minus
-
-    // Print minus sign
-    mov x0, #1
-    adr x1, minus_sign
-    mov x2, #1
-    mov x8, #64
-    svc #0
-
-    // Make value positive
-    fneg d0, d0
-
-skip_minus:
-    // Convert integer part
-    fcvtzs x0, d0             // x0 = int(d0)
-    bl print_integer
-
-    // Print dot '.'
-    mov x0, #1
-    adr x1, dot_char
-    mov x2, #1
-    mov x8, #64
-    svc #0
-
-    // Get fractional part: frac = d0 - float(int(d0))
-    frintm d4, d0             // d4 = floor(d0)
-    fsub d2, d0, d4           // d2 = d0 - floor(d0) (exact fraction)
-
-    // Para 2.5, d2 debe ser exactamente 0.5
-
-    // Multiplicar por 1_000_000 (6 decimales)
-    movz x1, #0x000F, lsl #16
-    movk x1, #0x4240, lsl #0   // x1 = 1000000
-    scvtf d3, x1              // d3 = 1000000.0
-    fmul d2, d2, d3           // d2 = frac * 1_000_000
-    
-    // Redondear al entero más cercano para evitar errores de precisión
-    frintn d2, d2             // d2 = round(d2)
-    fcvtzs x0, d2             // x0 = int(d2)
-
-    // Imprimir ceros a la izquierda si es necesario
-    mov x20, x0               // x20 = fracción entera
-    movz x21, #0x0001, lsl #16
-    movk x21, #0x86A0, lsl #0  // x21 = 100000
-    mov x22, #0               // inicializar contador de ceros
-    mov x23, #10              // constante para división
-
-leading_zero_loop:
-    udiv x24, x20, x21        // x24 = x20 / x21
-    cbnz x24, done_leading_zeros  // Si hay un dígito no cero, salir del bucle
-
-    // Imprimir '0'
-    mov x0, #1
-    adr x1, zero_char
-    mov x2, #1
-    mov x8, #64
-    svc #0
-
-    udiv x21, x21, x23        // x21 /= 10
-    add x22, x22, #1          // incrementar contador de ceros
-    cmp x21, #0               // verificar si llegamos al final
-    beq print_remaining       // si divisor es 0, saltar a imprimir el resto
-    b leading_zero_loop
-
-done_leading_zeros:
-    // Print the remaining fractional part
-    mov x0, x20
-    bl print_integer
-    b exit_function
-
-print_remaining:
-    // Caso especial cuando la parte fraccionaria es 0 después de imprimir ceros
-    cmp x20, #0
-    bne exit_function
-    
-    // Ya imprimimos todos los ceros necesarios
-    // No hace falta imprimir nada más
-
-exit_function:
-    // Restore context
-    ldp x23, x24, [sp], #16
-    ldp x21, x22, [sp], #16
-    ldp x19, x20, [sp], #16
-    ldp x29, x30, [sp], #16
-    ret
-    "},
-    };
-*/
 private readonly static Dictionary<string, string> FunctionDefinitions = new Dictionary<string, string>
     {
         { "print_integer", @"
@@ -715,47 +370,76 @@ copy2_loop:
 //   x0 - The integer value
 //--------------------------------------------------------------
 atoi:
-    // Save registers
-    stp x29, x30, [sp, #-16]!  // Save frame pointer and link register
-    stp x19, x20, [sp, #-16]!  // Save x19 and x20
+    stp x29, x30, [sp, #-16]!
+    stp x19, x20, [sp, #-16]!
+    stp x21, x22, [sp, #-16]!
 
-    mov x19, x0        // x19 = string address
-    mov x20, #0        // x20 = result
-    mov x21, #0        // x21 = sign (0 = positive, 1 = negative)
+    mov x19, x0        // x19 = puntero a la cadena
+    mov x20, #0        // x20 = resultado acumulado
+    mov x21, #0        // x21 = signo (0 = positivo, 1 = negativo)
+    mov x1, #0         // x1 = sin error por defecto
 
-    // Check for optional '-' sign
+    // Leer primer caracter
     ldrb w0, [x19]
-    cmp w0, #45        // '-'
-    bne .parse_digits
-    mov x21, #1        // Mark as negative
-    add x19, x19, #1   // Move to next character
+    cmp w0, #'0'
+    b.lt .check_minus
+    b .parse_digits
+
+.check_minus:
+    cmp w0, #'-'
+    b.ne .check_plus
+    mov x21, #1        // es negativo
+    add x19, x19, #1   // avanzar al siguiente caracter
+    b .parse_digits
+
+.check_plus:
+    cmp w0, #'+'       // opcional
+    b.ne .parse_digits
+    add x19, x19, #1
 
 .parse_digits:
     ldrb w0, [x19]
-    cbz w0, .done      // Stop at null terminator
+    cbz w0, .done      // fin de cadena
 
-    sub w0, w0, #48    // Convert ASCII to digit
-    cmp w0, #9
-    bhi .done          // Stop if not a valid digit
+    cmp w0, #'.'       // detectar decimal
+    beq .error
 
-    mov x22, #10       // Load immediate value 10 into x22
-    mul x20, x20, x22  // result *= 10
-    add x20, x20, w0   // result += digit
+    cmp w0, #'0'
+    blt .error
+    cmp w0, #'9'
+    bgt .error
 
-    add x19, x19, #1   // Move to next character
+    // convertir ASCII a número
+    sub w0, w0, #'0'
+
+    // multiplicar acumulador por 10
+    mov x22, #10
+    mul x20, x20, x22
+
+    // sumar dígito (extensión de 32 a 64 bits)
+    add x20, x20, w0, uxtw
+
+    // avanzar al siguiente caracter
+    add x19, x19, #1
     b .parse_digits
 
 .done:
     cmp x21, #0
-    beq .return        // If positive, return result
-    neg x20, x20       // If negative, negate result
+    beq .return
+    neg x20, x20
 
 .return:
-    mov x0, x20        // Return result in x0
+    mov x0, x20        // devolver resultado en x0
+    b .cleanup
 
-    // Restore registers
-    ldp x19, x20, [sp], #16  // Restore x19 and x20
-    ldp x29, x30, [sp], #16  // Restore frame pointer and link register
+.error:
+    mov x1, #1         // error: valor inválido
+    mov x0, #0         // resultado = 0
+
+.cleanup:
+    ldp x21, x22, [sp], #16
+    ldp x19, x20, [sp], #16
+    ldp x29, x30, [sp], #16
     ret
     "},
     
@@ -908,70 +592,119 @@ exit_function:
 // Output:
 //   d0 - The float value
 //--------------------------------------------------------------
+// parse_float
+// Entrada: x0 = dirección de cadena null-terminada
+// Salida:  d0 = float64 resultante
+//          x1 = 0 si éxito, 1 si error
+
 parse_float:
-    // Save registers
+    // Guardar registros
     stp x29, x30, [sp, #-16]!
     stp x19, x20, [sp, #-16]!
+    stp x21, x22, [sp, #-16]!
 
-    mov x19, x0        // x19 = string address
-    fmov d0, #0.0      // d0 = result
-    mov x20, #0        // x20 = integer part
-    mov x21, #0        // x21 = sign (0 = positive, 1 = negative)
-    mov x22, #10       // x22 = base 10 multiplier
-    fmov d1, #0.1      // d1 = fractional multiplier
+    mov x19, x0        // x19 = puntero a cadena
+    mov x20, #0        // parte entera
+    mov x21, #0        // signo (0 = positivo)
+    mov x1, #0         // sin error
 
-    // Check for optional '-' sign
+    ldr x2, =zero_double
+    ldr d0, [x2]       // d0 = 0.0
+
+    ldr x2, =one_double
+    ldr d1, [x2]       // d1 = 1.0 (divisor actual)
+
+    // Revisar si hay signo '-'
     ldrb w0, [x19]
-    cmp w0, #45        // '-'
-    bne .parse_digits
-    mov x21, #1        // Mark as negative
-    add x19, x19, #1   // Move to next character
+    cmp w0, #'-'
+    b.ne .check_plus2
+    mov x21, #1
+    add x19, x19, #1
+    b .parse_digits2
 
-.parse_digits:
+.check_plus2:
+    cmp w0, #'+'
+    b.ne .parse_digits2
+    add x19, x19, #1
+
+.parse_digits2:
     ldrb w0, [x19]
-    cbz w0, .done      // Stop at null terminator
+    cbz w0, .combine    // fin de cadena
 
-    sub w0, w0, #48    // Convert ASCII to digit
-    cmp w0, #9
-    bhi .check_fraction // If not a valid digit, check for '.'
+    cmp w0, #'.'
+    beq .parse_fraction
 
-    mul x20, x20, x22  // integer_part *= 10
-    add x20, x20, x0   // integer_part += digit
-    add x19, x19, #1   // Move to next character
-    b .parse_digits
+    cmp w0, #'0'
+    blt .error2
+    cmp w0, #'9'
+    bgt .error2
 
-.check_fraction:
-    cmp w0, #46        // '.'
-    bne .done          // If not '.', stop parsing
-    add x19, x19, #1   // Move to next character
+    sub w0, w0, #'0'     // ASCII a dígito
+
+    mov x3, #10
+    mul x20, x20, x3
+
+    uxtw x3, w0
+    add x20, x20, x3
+
+    add x19, x19, #1
+    b .parse_digits2
 
 .parse_fraction:
+    add x19, x19, #1       // pasar el '.'
+
+    ldr x2, =ten_double
+    ldr d2, [x2]           // d2 = 10.0
+
+.frac_loop:
     ldrb w0, [x19]
-    cbz w0, .done      // Stop at null terminator
+    cbz w0, .combine
 
-    sub w0, w0, #48    // Convert ASCII to digit
-    cmp w0, #9
-    bhi .done          // Stop if not a valid digit
+    cmp w0, #'0'
+    blt .error2
+    cmp w0, #'9'
+    bgt .error2
 
-    scvtf d2, x0       // Convert digit to float
-    fmul d2, d2, d1    // Multiply by fractional multiplier
-    fadd d0, d0, d2    // Add to result
-    fmul d1, d1, #0.1  // Update fractional multiplier
-    add x19, x19, #1   // Move to next character
-    b .parse_fraction
+    sub w0, w0, #'0'
+    scvtf d3, w0           // d3 = float(digito)
+    fdiv d3, d3, d1        // d3 /= divisor actual
+    fadd d0, d0, d3        // acumular fracción
+    fmul d1, d1, d2        // divisor *= 10.0
 
-.done:
-    scvtf d2, x20      // Convert integer part to float
-    fadd d0, d0, d2    // Add integer part to result
+    add x19, x19, #1
+    b .frac_loop
+
+.combine:
+    scvtf d3, x20          // convertir parte entera
+    fadd d0, d0, d3        // resultado = entero + fracción
+
     cmp x21, #0
-    beq .return        // If positive, return result
-    fneg d0, d0        // If negative, negate result
+    beq .return2
+    fneg d0, d0            // si negativo, cambiar signo
 
-.return:
-    // Restore registers
+.return2:
+    // Restaurar registros
+    ldp x21, x22, [sp], #16
     ldp x19, x20, [sp], #16
     ldp x29, x30, [sp], #16
     ret
+
+.error2:
+    ldr x2, =zero_double
+    ldr d0, [x2]
+    mov x1, #1
+    b .return2
+
+
+zero_double:
+    .double 0.0
+
+one_double:
+    .double 1.0
+
+ten_double:
+    .double 10.0
+
     "}
     };
     private readonly static Dictionary<string, string> Symbols = new Dictionary<string, string>
@@ -982,7 +715,12 @@ parse_float:
 
         {"str_true", @"str_true: .ascii ""true""" },
         {"str_false", @"str_false: .ascii ""false""" },
-        {"newline", @"newline: .ascii ""\n""" }
+        {"newline", @"newline: .ascii ""\n""" },
+
+        {"zero_double:", @"zero_double: .double 0.0" },
+        {"one_double:", @"one_double: .double 1.0" },
+        {"ten_double:", @"ten_double: .double 10.0" }
 
     };
 }
+

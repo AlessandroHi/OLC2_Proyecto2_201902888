@@ -28,3 +28,12 @@ func ackermann(m int, n int) int {
 var sumado int = sumar(1,2)
 
 fmt.Println(sumado)
+
+
+ numero := strconv.Atoi("123")
+    fmt.Println("Número:", numero) // Salida: Número: 123
+
+
+numero2 := strconv.ParseFloat("123.45")
+
+fmt.Ptintln(numero2)

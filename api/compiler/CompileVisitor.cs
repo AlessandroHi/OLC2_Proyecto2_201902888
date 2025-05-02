@@ -1308,50 +1308,58 @@ public override Object? VisitSwitchStmt(LanguageParser.SwitchStmtContext context
 
          return null;
     }
-
-    public override Object? VisitAtoiCall(LanguageParser.AtoiCallContext  context)
+public override Object? VisitAtoiCall(LanguageParser.AtoiCallContext context)
 {
     c.Comment("Llamada a strconv.Atoi");
 
-    // Evaluar el argumento (cadena)
+    // Evaluar la expresión dentro de strconv.Atoi
     Visit(context.expr());
-    var stringObject = c.PopObject(Register.X0);
+    var stringObject = c.PopObject(Register.X0); // Obtener el valor de la cadena
 
+    // Verificar que el tipo sea String
     if (stringObject.Type != StackObject.StackObjectType.String)
     {
         throw new Exception("Error: strconv.Atoi solo acepta cadenas como argumento.");
     }
 
-    // Llamar a la función atoi
+    // Registrar el uso de la función atoi en la biblioteca estándar
     c.stdLib.Use("atoi");
+
+    // Llamar a la función atoi de la biblioteca estándar
+    c.Comment("Convertir cadena a entero usando atoi");
     c.Bl("atoi");
 
-    // Apilar el resultado como entero
+    // El resultado estará en X0, lo apilamos como un entero
     c.Push(Register.X0);
     c.PushObject(c.IntObject());
+
     return null;
 }
-
 public override Object? VisitParseFloatCall(LanguageParser.ParseFloatCallContext context)
 {
     c.Comment("Llamada a strconv.ParseFloat");
 
-    // Evaluar el argumento (cadena)
+    // Evaluar la expresión dentro de strconv.ParseFloat
     Visit(context.expr());
-    var stringObject = c.PopObject(Register.X0);
+    var stringObject = c.PopObject(Register.X0); // Obtener el valor de la cadena
 
+    // Verificar que el tipo sea String
     if (stringObject.Type != StackObject.StackObjectType.String)
     {
         throw new Exception("Error: strconv.ParseFloat solo acepta cadenas como argumento.");
     }
 
-    // Llamar a la función parse_float
+    // Registrar el uso de la función parse_float en la biblioteca estándar
     c.stdLib.Use("parse_float");
+
+    // Llamar a la función parse_float de la biblioteca estándar
+    c.Comment("Convertir cadena a flotante usando parse_float");
     c.Bl("parse_float");
 
-    // Apilar el resultado como float
+    // El resultado estará en D0, lo apilamos como un float
     c.Push(Register.D0);
     c.PushObject(c.FloatObject());
+
     return null;
 }
 
