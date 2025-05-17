@@ -1051,9 +1051,9 @@ parse_float:
     beq .parse_fraction
 
     cmp w0, #'0'
-    blt .error
+    blt .error2
     cmp w0, #'9'
-    bgt .error
+    bgt .error2
 
     sub w0, w0, #'0'     // ASCII a dígito
 
@@ -1077,9 +1077,9 @@ parse_float:
     cbz w0, .combine
 
     cmp w0, #'0'
-    blt .error
+    blt .error2
     cmp w0, #'9'
-    bgt .error
+    bgt .error2
 
     sub w0, w0, #'0'
     scvtf d3, w0           // d3 = float(digito)
@@ -1105,7 +1105,7 @@ parse_float:
     ldp x29, x30, [sp], #16
     ret
 
-.error:
+.error2:
     ldr x2, =zero_double
     ldr d0, [x2]
     mov x1, #1
